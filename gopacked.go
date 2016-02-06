@@ -127,7 +127,10 @@ func fetchDefinition(gp *GoPack, url string) error {
 }
 
 func readDefinition(gp *GoPack, path string) error {
-	data, err := ioutil.ReadFile(*installPath)
+	if !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
+	data, err := ioutil.ReadFile(path + "gopacked.json")
 	if err != nil {
 		return err
 	}

@@ -68,6 +68,10 @@ func (gp GoPack) Install(path, mcPath string) {
 	gp.Save(path + "gopacked.json")
 }
 
+func (gp GoPack) Update(path, mcPath string) {
+
+}
+
 // Save saves the gopack definion to the given path.
 func (gp GoPack) Save(path string) {
 	json, err := json.Marshal(gp)

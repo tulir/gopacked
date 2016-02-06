@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	flag "github.com/ogier/pflag"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"runtime"
 	"strings"
@@ -15,7 +17,7 @@ var minecraftPath = flag.StringP("minecraft", "m", "", "")
 var help = `Simple command-line modpack manager.
 
 Usage:
-  gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL>
+  gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>
 
 Help options:
   -h, --help               Show this help page
@@ -30,9 +32,6 @@ func init() {
 		println(help)
 	}
 	flag.Parse()
-	if flag.NArg() < 2 {
-		panic(fmt.Errorf("Not enough arguments"))
-	}
 
 	if minecraftPath == nil || len(*minecraftPath) == 0 {
 		switch strings.ToLower(runtime.GOOS) {
@@ -50,18 +49,87 @@ func init() {
 }
 
 func main() {
-	if strings.ToLower(flag.Arg(0)) == "install" {
+	action := strings.ToLower(flag.Arg(0))
+	var gp GoPack
+	if action == "install" && flag.NArg() > 1 {
 		fmt.Println("Fetching goPack definition from", flag.Arg(1))
-		data := HTTPGet(flag.Arg(1))
-		if len(data) == 0 {
-			panic(fmt.Errorf("No data received!"))
-		}
-		var gp GoPack
-		err := json.Unmarshal(data, &gp)
-		println(gp.Name)
+		err := fetchDefinition(&gp, flag.Arg(1))
 		if err != nil {
 			panic(err)
 		}
+
+		if installPath == nil || len(*installPath) == 0 {
+			*installPath = *minecraftPath + "gopacked/" + gp.SimpleName + "/"
+		}
+
 		gp.Install(*installPath, *minecraftPath)
+	} else if action == "uninstall" {
+		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
+			panic(fmt.Errorf("Gopack URL or install location not specified!"))
+		}
+	} else if action == "update" {
+		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
+			panic(fmt.Errorf("Gopack URL or install location not specified!"))
+		}
+
+		if flag.NArg() > 1 {
+			if strings.HasPrefix(flag.Arg(1), "http") {
+				fmt.Println("Fetching goPack definition from", flag.Arg(1))
+				err := fetchDefinition(&gp, flag.Arg(1))
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				*installPath = *minecraftPath + "gopacked/" + flag.Arg(1)
+				fmt.Println("Reading goPack definition from", *installPath)
+				err := readDefinition(&gp, *installPath)
+				if err != nil {
+					panic(err)
+				}
+			}
+		} else {
+			fmt.Println("Reading goPack definition from", *installPath)
+			err := readDefinition(&gp, *installPath)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		fmt.Println("Updating goPack", gp.Name)
 	}
+}
+
+func fetchDefinition(gp *GoPack, url string) error {
+	response, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	response.Body.Close()
+
+	if len(data) == 0 {
+		return fmt.Errorf("No data received!")
+	}
+
+	err = json.Unmarshal(data, &gp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func readDefinition(gp *GoPack, path string) error {
+	data, err := ioutil.ReadFile(*installPath)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(data, gp)
+	if err != nil {
+		return err
+	}
+	return nil
 }

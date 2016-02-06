@@ -56,12 +56,12 @@ func main() {
 		if len(data) == 0 {
 			panic(fmt.Errorf("No data received!"))
 		}
-		var mp GoPack
-		err := json.Unmarshal(data, &mp)
-		println(mp.Name)
+		var gp GoPack
+		err := json.Unmarshal(data, &gp)
+		println(gp.Name)
 		if err != nil {
 			panic(err)
 		}
-		mp.Install(*installPath, *minecraftPath)
+		gp.Install(*installPath, *minecraftPath)
 	}
 }

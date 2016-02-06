@@ -60,8 +60,13 @@ func (gp GoPack) Install(path, mcPath string) {
 	gp.Save(filepath.Join(path, "gopacked.json"))
 }
 
-// Update updates this GoPack.
+// Update this GoPack.
 func (gp GoPack) Update(path, mcPath string) {
+	// TODO Implement me
+}
+
+// Uninstall this GoPack.
+func (gp GoPack) Uninstall(path, mcPath string) {
 	// TODO Implement me
 }
 

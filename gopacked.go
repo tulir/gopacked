@@ -61,11 +61,7 @@ func main() {
 		}
 
 		gp.Install(*installPath, *minecraftPath)
-	} else if action == "uninstall" {
-		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
-			panic(fmt.Errorf("Gopack URL or install location not specified!"))
-		}
-	} else if action == "update" {
+	} else if action == "uninstall" || action == "update" {
 		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
 			panic(fmt.Errorf("Gopack URL or install location not specified!"))
 		}
@@ -97,7 +93,11 @@ func main() {
 			*installPath = filepath.Join(*minecraftPath, "gopacked", gp.SimpleName)
 		}
 
-		gp.Update(*installPath, *minecraftPath)
+		if action == "update" {
+			gp.Update(*installPath, *minecraftPath)
+		} else if action == "uninstall" {
+			gp.Uninstall(*installPath, *minecraftPath)
+		}
 	}
 }
 

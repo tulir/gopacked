@@ -7,19 +7,20 @@ import (
 	flag "github.com/ogier/pflag"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
 
 // GoPack is the base struct for a GoPacked modpack.
 type GoPack struct {
-	Name        string            `json:"name"`
-	SimpleName  string            `json:"simplename"`
-	Author      string            `json:"author"`
-	Version     string            `json:"version"`
-	ProfileArgs map[string]string `json:"profile-settings"`
-	MCLVersion  FileEntry         `json:"mcl-version"`
-	Files       FileEntry         `json:"files"`
+	Name        string                 `json:"name"`
+	SimpleName  string                 `json:"simplename"`
+	Author      string                 `json:"author"`
+	Version     string                 `json:"version"`
+	ProfileArgs map[string]interface{} `json:"profile-settings"`
+	MCLVersion  FileEntry              `json:"mcl-version"`
+	Files       FileEntry              `json:"files"`
 }
 
 func (mp GoPack) install(path, mcPath string) {
@@ -43,14 +44,17 @@ func (mp GoPack) install(path, mcPath string) {
 		panic(err)
 	}
 
-	packProfile := gabs.New()
-	packProfile.Set(mp.Name, "name")
-	packProfile.Set(path, "gameDir")
-	packProfile.Set(mp.SimpleName, "lastVersionId")
-	for key, value := range mp.ProfileArgs {
-		packProfile.Set(value, key)
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		panic(err)
 	}
-	profiles.Set(packProfile, "profiles", mp.Name)
+
+	profiles.Set(mp.Name, "profiles", mp.Name, "name")
+	profiles.Set(absPath, "profiles", mp.Name, "gameDir")
+	profiles.Set(mp.SimpleName, "profiles", mp.Name, "lastVersionId")
+	for key, value := range mp.ProfileArgs {
+		profiles.Set(value, "profiles", mp.Name, key)
+	}
 	println(profiles.StringIndent("", "  "))
 	err = ioutil.WriteFile(mcPath+"launcher_profiles.json", []byte(profiles.StringIndent("", "  ")), 0644)
 	if err != nil {

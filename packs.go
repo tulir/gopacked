@@ -6,7 +6,6 @@ import (
 	"github.com/Jeffail/gabs"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 )
 
 // GoPack is the base struct for a GoPacked modpack.
@@ -32,17 +31,10 @@ func (gp GoPack) Install(path, mcPath string) {
 		panic(err)
 	}
 
-	if !strings.HasSuffix(path, "/") {
-		path = path + "/"
-	}
-	if !strings.HasSuffix(mcPath, "/") {
-		mcPath = mcPath + "/"
-	}
-
 	fmt.Printf("Installing %[1]s v%[2]s by %[3]s to %[4]s\n", gp.Name, gp.Version, gp.Author, path)
-	gp.MCLVersion.Install(mcPath+"versions/"+gp.SimpleName, "")
+	gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "")
 
-	profileData, err := ioutil.ReadFile(mcPath + "launcher_profiles.json")
+	profileData, err := ioutil.ReadFile(filepath.Join(mcPath, "launcher_profiles.json"))
 	if err != nil {
 		panic(err)
 	}
@@ -59,13 +51,13 @@ func (gp GoPack) Install(path, mcPath string) {
 		profiles.Set(value, "profiles", gp.Name, key)
 	}
 	println(profiles.StringIndent("", "  "))
-	err = ioutil.WriteFile(mcPath+"launcher_profiles.json", []byte(profiles.StringIndent("", "  ")), 0644)
+	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), []byte(profiles.StringIndent("", "  ")), 0644)
 	if err != nil {
 		panic(err)
 	}
 
 	gp.Files.Install(path, "")
-	gp.Save(path + "gopacked.json")
+	gp.Save(filepath.Join(path, "gopacked.json"))
 }
 
 // Update updates this GoPack.

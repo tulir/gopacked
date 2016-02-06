@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -36,15 +37,12 @@ func init() {
 	if minecraftPath == nil || len(*minecraftPath) == 0 {
 		switch strings.ToLower(runtime.GOOS) {
 		case "windows":
-			*minecraftPath = os.Getenv("APPDATA") + "./minecraft"
+			*minecraftPath = filepath.Join(os.Getenv("APPDATA"), ".minecraft")
 		case "darwin":
-			*minecraftPath = os.Getenv("HOME") + "/Library/Application Support/minecraft"
+			*minecraftPath = filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "minecraft")
 		default:
-			*minecraftPath = os.Getenv("HOME") + "/.minecraft"
+			*minecraftPath = filepath.Join(os.Getenv("HOME"), ".minecraft")
 		}
-	}
-	if !strings.HasSuffix(*minecraftPath, "/") {
-		*minecraftPath = *minecraftPath + "/"
 	}
 }
 
@@ -59,7 +57,7 @@ func main() {
 		}
 
 		if installPath == nil || len(*installPath) == 0 {
-			*installPath = *minecraftPath + "gopacked/" + gp.SimpleName + "/"
+			*installPath = filepath.Join(*minecraftPath, "gopacked", gp.SimpleName)
 		}
 
 		gp.Install(*installPath, *minecraftPath)
@@ -80,7 +78,7 @@ func main() {
 					panic(err)
 				}
 			} else {
-				*installPath = *minecraftPath + "gopacked/" + flag.Arg(1)
+				*installPath = filepath.Join(*minecraftPath, "gopacked", flag.Arg(1))
 				fmt.Println("Reading goPack definition from", *installPath)
 				err := readDefinition(&gp, *installPath)
 				if err != nil {
@@ -96,7 +94,7 @@ func main() {
 		}
 
 		if installPath == nil || len(*installPath) == 0 {
-			*installPath = *minecraftPath + "gopacked/" + gp.SimpleName + "/"
+			*installPath = filepath.Join(*minecraftPath, "gopacked", gp.SimpleName)
 		}
 
 		gp.Update(*installPath, *minecraftPath)
@@ -127,10 +125,7 @@ func fetchDefinition(gp *GoPack, url string) error {
 }
 
 func readDefinition(gp *GoPack, path string) error {
-	if !strings.HasSuffix(path, "/") {
-		path = path + "/"
-	}
-	data, err := ioutil.ReadFile(path + "gopacked.json")
+	data, err := ioutil.ReadFile(filepath.Join(path, "gopacked.json"))
 	if err != nil {
 		return err
 	}

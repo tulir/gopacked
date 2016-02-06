@@ -95,7 +95,11 @@ func main() {
 			}
 		}
 
-		fmt.Println("Updating goPack", gp.Name)
+		if installPath == nil || len(*installPath) == 0 {
+			*installPath = *minecraftPath + "gopacked/" + gp.SimpleName + "/"
+		}
+
+		gp.Update(*installPath, *minecraftPath)
 	}
 }
 

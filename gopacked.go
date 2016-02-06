@@ -116,7 +116,7 @@ Help options:
 
 Application options:
   -p, --path=PATH          The path to save the modpack in.
-  -m, --minecraft=PATH     The minecraft directory (for things like launcher-profiles.json)
+  -m, --minecraft=PATH     The minecraft directory
 `
 
 func init() {

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// FileEntry ...
+// FileEntry contains the data of a file or directory.
 type FileEntry struct {
 	Type     string               `json:"type"`
 	FileName string               `json:"filename, omitempty"`

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,6 +42,24 @@ func (fe FileEntry) Install(path, name string) {
 			path = filepath.Join(path, split[len(split)-1])
 		}
 		fmt.Printf("Downloading %[1]s v%[2]s\n", name, fe.Version)
-		Download(fe.URL, path)
+		downloadFile(fe.URL, path)
 	}
+}
+
+func downloadFile(url, saveTo string) error {
+	out, err := os.Create(saveTo)
+	defer out.Close()
+	if err != nil {
+		return err
+	}
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+	return nil
 }

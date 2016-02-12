@@ -58,6 +58,13 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 				value.Remove(value.path(path, key), key)
 			}
 		}
+
+		for key, value := range new.Children {
+			_, ok := fe.Children[key]
+			if !ok {
+				value.Install(value.path(path, key), key)
+			}
+		}
 	} else if fe.Type == "file" {
 		compare, err := ParseAndCompare(new.Version, fe.Version)
 		if err != nil {

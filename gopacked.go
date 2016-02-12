@@ -66,10 +66,11 @@ func main() {
 			panic(fmt.Errorf("Gopack URL or install location not specified!"))
 		}
 
+		var updated GoPack
 		if flag.NArg() > 1 {
 			if strings.HasPrefix(flag.Arg(1), "http") {
 				fmt.Println("Fetching goPack definition from", flag.Arg(1))
-				err := fetchDefinition(&gp, flag.Arg(1))
+				err := fetchDefinition(&updated, flag.Arg(1))
 				if err != nil {
 					panic(err)
 				}
@@ -94,7 +95,21 @@ func main() {
 		}
 
 		if action == "update" {
-			gp.Update(*installPath, *minecraftPath)
+			if len(gp.Name) == 0 {
+				err := readDefinition(&gp, *installPath)
+				if err != nil {
+					panic(err)
+				}
+			}
+
+			if len(updated.Name) == 0 {
+				err := fetchDefinition(&updated, gp.UpdateURL)
+				if err != nil {
+					panic(err)
+				}
+			}
+
+			gp.Update(updated, *installPath, *minecraftPath)
 		} else if action == "uninstall" {
 			gp.Uninstall(*installPath, *minecraftPath)
 		}

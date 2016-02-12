@@ -35,10 +35,10 @@ func (fe FileEntry) Install(path, name string) {
 // Remove removes the given FileEntry from the given path.
 func (fe FileEntry) Remove(path, name string) {
 	if fe.Type == "directory" {
-		fmt.Printf("Removing %[1]s...", name)
+		fmt.Printf("Removing %[1]s...\n", name)
 		os.RemoveAll(path)
 	} else if fe.Type == "file" {
-		fmt.Printf("Removing %[1]s v%[2]s...", name, fe.Version)
+		fmt.Printf("Removing %[1]s v%[2]s...\n", name, fe.Version)
 		os.Remove(path)
 	}
 }
@@ -61,7 +61,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 	} else if fe.Type == "file" {
 		compare, err := ParseAndCompare(new.Version, fe.Version)
 		if err != nil {
-			fmt.Printf("Failed to parse version entry of %s", name)
+			fmt.Printf("Failed to parse version entry of %s\n", name)
 		}
 
 		if compare == 1 {

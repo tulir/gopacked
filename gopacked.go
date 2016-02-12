@@ -96,6 +96,7 @@ func main() {
 
 		if action == "update" {
 			if len(gp.Name) == 0 {
+				fmt.Println("Reading installed goPack definition from", *installPath)
 				err := readDefinition(&gp, *installPath)
 				if err != nil {
 					panic(err)
@@ -103,6 +104,7 @@ func main() {
 			}
 
 			if len(updated.Name) == 0 {
+				fmt.Println("Fetching updated goPack definition from", gp.UpdateURL)
 				err := fetchDefinition(&updated, gp.UpdateURL)
 				if err != nil {
 					panic(err)

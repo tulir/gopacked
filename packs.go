@@ -99,7 +99,9 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 	fmt.Printf("Updating %[1]s by %[3]s\n", gp.Name, gp.Version, gp.Author, path)
 
 	gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "")
+	gp.Files.Update(new.Files, path, path, "")
 	gp.InstallProfile(path, mcPath)
+	new.Save(filepath.Join(path, "gopacked.json"))
 }
 
 // Uninstall this GoPack.

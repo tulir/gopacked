@@ -44,6 +44,26 @@ func (gp GoPack) InstallProfile(path, mcPath string) {
 	}
 }
 
+// UninstallProfile uninstalls the profile data from launcher_profiles.json
+func (gp GoPack) UninstallProfile(path, mcPath string) {
+	profileData, err := ioutil.ReadFile(filepath.Join(mcPath, "launcher_profiles.json"))
+	if err != nil {
+		panic(err)
+	}
+
+	profiles, err := gabs.ParseJSON(profileData)
+	if err != nil {
+		panic(err)
+	}
+
+	profiles.Delete("profiles", gp.Name)
+
+	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), []byte(profiles.StringIndent("", "  ")), 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Install installs the GoPack to the given path and minecraft directory.
 func (gp GoPack) Install(path, mcPath string) {
 	var err error
@@ -84,7 +104,20 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 
 // Uninstall this GoPack.
 func (gp GoPack) Uninstall(path, mcPath string) {
-	// TODO Implement me
+	var err error
+	path, err = filepath.Abs(path)
+	if err != nil {
+		panic(err)
+	}
+	mcPath, err = filepath.Abs(mcPath)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Uninstalling %[1]s by %[2]s from %[3]s\n", gp.Name, gp.Version, path)
+
+	gp.UninstallProfile(path, mcPath)
+	gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "")
+	gp.Files.Remove(path, "")
 }
 
 // Save saves the gopack definion to the given path.

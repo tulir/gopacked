@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Jeffail/gabs"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -32,6 +33,7 @@ func (gp GoPack) InstallProfile(path, mcPath string) {
 		panic(err)
 	}
 
+	fmt.Printf("Adding %s to launcher_profiles.json", gp.Name)
 	profiles.Set(gp.Name, "profiles", gp.Name, "name")
 	profiles.Set(path, "profiles", gp.Name, "gameDir")
 	profiles.Set(gp.SimpleName, "profiles", gp.Name, "lastVersionId")
@@ -56,6 +58,7 @@ func (gp GoPack) UninstallProfile(path, mcPath string) {
 		panic(err)
 	}
 
+	fmt.Printf("Removing %s from launcher_profiles.json", gp.Name)
 	profiles.Delete("profiles", gp.Name)
 
 	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), []byte(profiles.StringIndent("", "  ")), 0644)
@@ -82,6 +85,7 @@ func (gp GoPack) Install(path, mcPath string) {
 	gp.InstallProfile(path, mcPath)
 
 	gp.Files.Install(path, "")
+	fmt.Printf("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	gp.Save(filepath.Join(path, "gopacked.json"))
 }
 
@@ -101,6 +105,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 	gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "")
 	gp.Files.Update(new.Files, path, path, "")
 	gp.InstallProfile(path, mcPath)
+	fmt.Printf("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	new.Save(filepath.Join(path, "gopacked.json"))
 }
 
@@ -120,6 +125,7 @@ func (gp GoPack) Uninstall(path, mcPath string) {
 	gp.UninstallProfile(path, mcPath)
 	gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "")
 	gp.Files.Remove(path, "")
+	os.RemoveAll(path)
 }
 
 // Save saves the gopack definion to the given path.

@@ -25,7 +25,7 @@ Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`
 The JSON base must contain a name, simple name, update URL, author and version. The base must also contain two file entries. "mcl-version" is saved into .minecraft/versions and "files" is saved into the modpacks game directory.
 The base may contain a profile settings block which contains the non-default settings to insert into the modpack profile in Minecraft's launcher_profiles.json.
 
-```
+```json
 {
   "name": "Example Modpack",
   "simplename": "examplepack",
@@ -53,7 +53,7 @@ The display name of the file is the name of the JSON object, but the filesystem 
 If a custom filename is set, the filename is either the JSON object name (for directories) or the final part of the URL (for files)
 
 Here's an example of a file entry that doesn't have the filename field set. This file would be saved as "example.jar" by goPacked.
-```
+```json
 "A file entry": {
   "type": "file",
   "version": "1.2.3.4",
@@ -62,7 +62,7 @@ Here's an example of a file entry that doesn't have the filename field set. This
 ```
 
 Directory entries usually contain children. They can be any kind of file entries. This directory would be named "exampledir", since the filename field is set.
-```
+```json
 "A directory entry": {
   "type": "directory",
   "filename": "exampledir",

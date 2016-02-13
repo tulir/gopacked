@@ -20,6 +20,11 @@ var help = `goPacked 0.1 - Simple command-line modpack manager.
 Usage:
   gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>
 
+Available actions:
+  install                  Install the modpack from the given URL.
+  update                   Update the modpack by URL, name or install path.
+  uninstall                Uninstall the modpack by URL, name or install path.
+
 Help options:
   -h, --help               Show this help page
 

@@ -6,7 +6,8 @@ import (
 	"strings"
 )
 
-// Version TODO comment
+// Version contains four version number levels. Level 1 is the highest in importance.
+// Higher importance means overriding of lower importances.
 type Version struct {
 	Level1, Level2, Level3, Level4 int
 }

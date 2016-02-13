@@ -14,7 +14,7 @@ Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`
 ### Actions
 `install` - Install the goPack from the given goPack definition URL.
 
-`update` - Update a goPack. You must either provide the modpack path with `-p`, the goPack definition URL or the pack name. If you provide the goPack definition URL or the pack name, the pack must be installed in the default location (`.minecraft/gopacked/<simplename>`)
+`update` - Update a goPack. You must either provide the modpack path with `-p`, the goPack definition URL or the pack name. If you only provide the goPack definition URL or the pack name, the pack must be installed in the default location (`.minecraft/gopacked/<simplename>`)
 
 `uninstall` - Uninstall a goPack. Same arguments as `update`.
 

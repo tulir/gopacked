@@ -41,16 +41,16 @@ func (fe FileEntry) Install(path, name string) {
 // Remove removes the given FileEntry from the given path.
 func (fe FileEntry) Remove(path, name string) {
 	if fe.Type == "directory" {
-		fmt.Printf("Removing %[1]s...\n", name)
+		fmt.Printf("Removing %[1]s...\n", path)
 		err := os.RemoveAll(path)
 		if err != nil {
-			fmt.Printf("Failed to remove %[1]s: %[2]s\n", name, err)
+			fmt.Printf("Failed to remove %[1]s: %[2]s\n", path, err)
 		}
 	} else if fe.Type == "file" {
 		fmt.Printf("Removing %[1]s v%[2]s...\n", name, fe.Version)
 		err := os.Remove(path)
 		if err != nil {
-			fmt.Printf("Failed to remove %[1]s: %[2]s\n", name, err)
+			fmt.Printf("Failed to remove %[1]s (%[3]s): %[2]s\n", name, err, path)
 		}
 	}
 }

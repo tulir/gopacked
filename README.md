@@ -19,7 +19,7 @@ Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`
 `uninstall` - Uninstall a goPack. Same arguments as `update`.
 
 ## Creating a goPack
-[The pack I created goPacked for](https://maunium.net/ventornamodpilerna) can be used as an example. You may want to use [a JSON linter](http://jsonlint.com) or download the full page when viewing that pack definition.
+[The pack I created goPacked for](https://maunium.net/ventornamodpilerna/modpack.json) can be used as an example.
 
 ### Format base
 The JSON base must contain a name, simple name, update URL, author and version. The base must also contain two file entries. "mcl-version" is saved into .minecraft/versions and "files" is saved into the modpacks game directory.

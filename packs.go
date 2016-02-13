@@ -91,18 +91,18 @@ func (gp GoPack) Install(path, mcPath string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to get absolute version of %s: %s", path, err)
+		fmt.Printf("[Warning] Failed to get absolute version of %s: %s\n", path, err)
 	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to get absolute version of %s: %s", mcPath, err)
+		fmt.Printf("[Warning] Failed to get absolute version of %s: %s\n", mcPath, err)
 	}
 
 	fmt.Printf("Installing %[1]s v%[2]s by %[3]s to %[4]s\n", gp.Name, gp.Version, gp.Author, path)
 
 	err = gp.InstallProfile(path, mcPath)
 	if err != nil {
-		fmt.Printf("[Error] Profile install failed: %s", err)
+		fmt.Printf("[Error] Profile install failed: %s\n", err)
 	}
 
 	gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "")
@@ -111,7 +111,7 @@ func (gp GoPack) Install(path, mcPath string) {
 	fmt.Printf("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = gp.Save(filepath.Join(path, "gopacked.json"))
 	if err != nil {
-		fmt.Printf("[Error] goPack definition save failed: %s", err)
+		fmt.Printf("[Error] goPack definition save failed: %s\n", err)
 	}
 }
 
@@ -120,18 +120,18 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to get absolute version of %s: %s", path, err)
+		fmt.Printf("[Warning] Failed to get absolute version of %s: %s\n", path, err)
 	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to get absolute version of %s: %s", mcPath, err)
+		fmt.Printf("[Warning] Failed to get absolute version of %s: %s\n", mcPath, err)
 	}
 
 	fmt.Printf("Updating %[1]s by %[3]s\n", gp.Name, gp.Version, gp.Author, path)
 
 	err = gp.InstallProfile(path, mcPath)
 	if err != nil {
-		fmt.Printf("[Error] Profile install failed: %s", err)
+		fmt.Printf("[Error] Profile install failed: %s\n", err)
 	}
 
 	gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "")
@@ -140,7 +140,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 	fmt.Printf("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = new.Save(filepath.Join(path, "gopacked.json"))
 	if err != nil {
-		fmt.Printf("[Error] goPack definition save failed: %s", err)
+		fmt.Printf("[Error] goPack definition save failed: %s\n", err)
 	}
 }
 
@@ -149,18 +149,18 @@ func (gp GoPack) Uninstall(path, mcPath string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to get absolute version of %s: %s", path, err)
+		fmt.Printf("[Warning] Failed to get absolute version of %s: %s\n", path, err)
 	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to get absolute version of %s: %s", mcPath, err)
+		fmt.Printf("[Warning] Failed to get absolute version of %s: %s\n", mcPath, err)
 	}
 
 	fmt.Printf("Uninstalling %[1]s by %[2]s from %[3]s\n", gp.Name, gp.Version, path)
 
 	err = gp.UninstallProfile(path, mcPath)
 	if err != nil {
-		fmt.Printf("[Error] Profile uninstall failed: %s", err)
+		fmt.Printf("[Error] Profile uninstall failed: %s\n", err)
 	}
 
 	gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "")

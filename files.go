@@ -24,7 +24,7 @@ func (fe FileEntry) Install(path, name string) {
 		fmt.Printf("Creating directory %s\n", name)
 		err := os.MkdirAll(path, 0755)
 		if err != nil {
-			fmt.Printf("Failed to create %[1]s: %[2]s", name, err)
+			fmt.Printf("Failed to create %[1]s: %[2]s\n", name, err)
 		}
 		for key, value := range fe.Children {
 			value.Install(value.path(path, key), key)
@@ -33,7 +33,7 @@ func (fe FileEntry) Install(path, name string) {
 		fmt.Printf("Downloading %[1]s v%[2]s\n", name, fe.Version)
 		err := downloadFile(fe.URL, path)
 		if err != nil {
-			fmt.Printf("Failed to install %[1]s: %[2]s", name, err)
+			fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
 		}
 	}
 }
@@ -44,13 +44,13 @@ func (fe FileEntry) Remove(path, name string) {
 		fmt.Printf("Removing %[1]s...\n", name)
 		err := os.RemoveAll(path)
 		if err != nil {
-			fmt.Printf("Failed to remove %[1]s: %[2]s", name, err)
+			fmt.Printf("Failed to remove %[1]s: %[2]s\n", name, err)
 		}
 	} else if fe.Type == "file" {
 		fmt.Printf("Removing %[1]s v%[2]s...\n", name, fe.Version)
 		err := os.Remove(path)
 		if err != nil {
-			fmt.Printf("Failed to remove %[1]s: %[2]s", name, err)
+			fmt.Printf("Failed to remove %[1]s: %[2]s\n", name, err)
 		}
 	}
 }
@@ -100,11 +100,11 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 		}
 		err = os.Remove(path)
 		if err != nil {
-			fmt.Printf("Failed to remove file at %[1]s: %[2]s", path, err)
+			fmt.Printf("Failed to remove file at %[1]s: %[2]s\n", path, err)
 		}
 		err = downloadFile(new.URL, newpath)
 		if err != nil {
-			fmt.Printf("Failed to install %[1]s: %[2]s", name, err)
+			fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
 		}
 	}
 }

@@ -50,32 +50,44 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 			fmt.Printf("Creating directory %s\n", name)
 			os.MkdirAll(path, 0755)
 		}
+		// Loop through the old file list. This loop updates outdated files and removes files that are no longer
+		// in the updated modpack definition.
 		for key, value := range fe.Children {
 			newVal, ok := new.Children[key]
 			if ok {
+				// File already exists, call Update
 				value.Update(newVal, value.path(path, key), newVal.path(path, key), key)
 			} else {
+				// File no longer exists, call Remove
 				value.Remove(value.path(path, key), key)
 			}
 		}
 
+		// Loop through the new file list. This loop installs new files that did not exist before.
 		for key, value := range new.Children {
 			_, ok := fe.Children[key]
 			if !ok {
+				// File didn't exist before, call Install
 				value.Install(value.path(path, key), key)
 			}
 		}
 	} else if fe.Type == "file" {
+		// Compare the versions of the new and old file.
 		compare, err := ParseAndCompare(new.Version, fe.Version)
 		if err != nil {
 			fmt.Printf("Failed to parse version entry of %s\n", name)
 		}
 
+		// If the version number of the new file is different from the current one, upgrade (or downgrade) it.
 		if compare == 1 {
 			fmt.Printf("Updating %[1]s from v%[2]s to v%[3]s\n", name, fe.Version, new.Version)
-			os.Remove(path)
-			downloadFile(new.URL, newpath)
+		} else if compare == -1 {
+			fmt.Printf("Downgrading %[1]s from v%[2]s to v%[3]s\n", name, fe.Version, new.Version)
+		} else {
+			return
 		}
+		os.Remove(path)
+		downloadFile(new.URL, newpath)
 	}
 }
 

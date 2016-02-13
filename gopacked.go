@@ -53,7 +53,8 @@ func main() {
 		fmt.Println("Fetching goPack definition from", flag.Arg(1))
 		err := fetchDefinition(&gp, flag.Arg(1))
 		if err != nil {
-			panic(err)
+			fmt.Println("[Fatal] Failed to fetch goPack definition:", err)
+			return
 		}
 
 		if installPath == nil || len(*installPath) == 0 {
@@ -63,7 +64,8 @@ func main() {
 		gp.Install(*installPath, *minecraftPath)
 	} else if action == "uninstall" || action == "update" {
 		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
-			panic(fmt.Errorf("Gopack URL or install location not specified!"))
+			fmt.Println("[Fatal] goPack URL or install location not specified!")
+			return
 		}
 
 		var updated GoPack
@@ -72,21 +74,21 @@ func main() {
 				fmt.Println("Fetching goPack definition from", flag.Arg(1))
 				err := fetchDefinition(&updated, flag.Arg(1))
 				if err != nil {
-					panic(err)
+					fmt.Println("[Fatal] Failed to fetch goPack definition:", err)
 				}
 			} else {
 				*installPath = filepath.Join(*minecraftPath, "gopacked", flag.Arg(1))
 				fmt.Println("Reading goPack definition from", *installPath)
 				err := readDefinition(&gp, *installPath)
 				if err != nil {
-					panic(err)
+					fmt.Println("[Fatal] Failed to read goPack definition:", err)
 				}
 			}
 		} else {
 			fmt.Println("Reading goPack definition from", *installPath)
 			err := readDefinition(&gp, *installPath)
 			if err != nil {
-				panic(err)
+				fmt.Println("[Fatal] Failed to read goPack definition:", err)
 			}
 		}
 
@@ -99,7 +101,7 @@ func main() {
 				fmt.Println("Reading installed goPack definition from", *installPath)
 				err := readDefinition(&gp, *installPath)
 				if err != nil {
-					panic(err)
+					fmt.Println("[Fatal] Failed to read local goPack definition:", err)
 				}
 			}
 
@@ -107,7 +109,7 @@ func main() {
 				fmt.Println("Fetching updated goPack definition from", gp.UpdateURL)
 				err := fetchDefinition(&updated, gp.UpdateURL)
 				if err != nil {
-					panic(err)
+					fmt.Println("[Fatal] Failed to updated goPack definition:", err)
 				}
 			}
 

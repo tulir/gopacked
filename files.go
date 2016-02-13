@@ -22,13 +22,19 @@ type FileEntry struct {
 func (fe FileEntry) Install(path, name string) {
 	if fe.Type == "directory" {
 		fmt.Printf("Creating directory %s\n", name)
-		os.MkdirAll(path, 0755)
+		err := os.MkdirAll(path, 0755)
+		if err != nil {
+			fmt.Printf("Failed to create %[1]s: %[2]s", name, err)
+		}
 		for key, value := range fe.Children {
 			value.Install(value.path(path, key), key)
 		}
 	} else if fe.Type == "file" {
 		fmt.Printf("Downloading %[1]s v%[2]s\n", name, fe.Version)
-		downloadFile(fe.URL, path)
+		err := downloadFile(fe.URL, path)
+		if err != nil {
+			fmt.Printf("Failed to install %[1]s: %[2]s", name, err)
+		}
 	}
 }
 
@@ -36,10 +42,16 @@ func (fe FileEntry) Install(path, name string) {
 func (fe FileEntry) Remove(path, name string) {
 	if fe.Type == "directory" {
 		fmt.Printf("Removing %[1]s...\n", name)
-		os.RemoveAll(path)
+		err := os.RemoveAll(path)
+		if err != nil {
+			fmt.Printf("Failed to remove %[1]s: %[2]s", name, err)
+		}
 	} else if fe.Type == "file" {
 		fmt.Printf("Removing %[1]s v%[2]s...\n", name, fe.Version)
-		os.Remove(path)
+		err := os.Remove(path)
+		if err != nil {
+			fmt.Printf("Failed to remove %[1]s: %[2]s", name, err)
+		}
 	}
 }
 
@@ -86,8 +98,14 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 		} else {
 			return
 		}
-		os.Remove(path)
-		downloadFile(new.URL, newpath)
+		err = os.Remove(path)
+		if err != nil {
+			fmt.Printf("Failed to remove file at %[1]s: %[2]s", path, err)
+		}
+		err = downloadFile(new.URL, newpath)
+		if err != nil {
+			fmt.Printf("Failed to install %[1]s: %[2]s", name, err)
+		}
 	}
 }
 

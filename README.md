@@ -1,7 +1,17 @@
 # goPacked
 goPacked is a simple text-based Minecraft modpack manager. It uses a fairly simple JSON pack format.
 
+## Usage
+Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`
+
+### Actions
+`install` - Install the goPack from the given goPack definition URL.
+
+`update` - Update a goPack. You must either provide the modpack path with `-p`, the goPack definition URL or the pack name. If you provide the goPack definition URL or the pack name, the pack must be installed in the default location (`.minecraft/gopacked/<simplename>`)
+
+`uninstall` - Uninstall a goPack. Same arguments as `update`.
 ## Creating a goPack
+[The pack I created goPacked for](https://maunium.net/ventornamodpilerna) can be used as an example. You may want to use [a JSON linter](http://jsonlint.com) or download the full page when viewing that pack definition.
 ### Format base
 The JSON base must contain a name, simple name, update URL, author and version. The base must also contain two file entries. "mcl-version" is saved into .minecraft/versions and "files" is saved into the modpacks game directory.
 The base may contain a profile settings block which contains the non-default settings to insert into the modpack profile in Minecraft's launcher_profiles.json.

@@ -33,7 +33,7 @@ func (gp GoPack) InstallProfile(path, mcPath string) error {
 		return fmt.Errorf("Failed to parse JSON: %s", err)
 	}
 
-	fmt.Printf("Adding %s to launcher_profiles.json", gp.Name)
+	fmt.Printf("Adding %s to launcher_profiles.json\n", gp.Name)
 
 	_, err = profiles.Set(gp.Name, "profiles", gp.Name, "name")
 	if err != nil {
@@ -73,7 +73,7 @@ func (gp GoPack) UninstallProfile(path, mcPath string) error {
 		return fmt.Errorf("Failed to parse json: %s", err)
 	}
 
-	fmt.Printf("Removing %s from launcher_profiles.json", gp.Name)
+	fmt.Printf("Removing %s from launcher_profiles.json\n", gp.Name)
 	err = profiles.Delete("profiles", gp.Name)
 	if err != nil {
 		return fmt.Errorf("Failed to edit JSON: %s", err)
@@ -108,7 +108,7 @@ func (gp GoPack) Install(path, mcPath string) {
 	gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "")
 	gp.Files.Install(path, "")
 
-	fmt.Printf("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
+	fmt.Printf("Saving goPack definition to %s\n", filepath.Join(path, "gopacked.json"))
 	err = gp.Save(filepath.Join(path, "gopacked.json"))
 	if err != nil {
 		fmt.Printf("[Error] goPack definition save failed: %s\n", err)
@@ -137,7 +137,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 	gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "")
 	gp.Files.Update(new.Files, path, path, "")
 
-	fmt.Printf("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
+	fmt.Printf("Saving goPack definition to %s\n", filepath.Join(path, "gopacked.json"))
 	err = new.Save(filepath.Join(path, "gopacked.json"))
 	if err != nil {
 		fmt.Printf("[Error] goPack definition save failed: %s\n", err)

@@ -55,7 +55,7 @@ func (fe FileEntry) Install(path, name string) {
 		fmt.Printf("Downloading %[1]s v%[2]s\n", name, fe.Version)
 		err := downloadFile(fe.URL, path)
 		if err != nil {
-			fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
+			fmt.Printf("Failed to download %[1]s: %[2]s\n", name, err)
 		}
 	} else if fe.Type == TypeZIPArchive {
 		fmt.Printf("Downloading and unzipping %[1]s v%[2]s\n", name, fe.Version)
@@ -149,7 +149,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 			}
 			err = downloadFile(new.URL, newpath)
 			if err != nil {
-				fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
+				fmt.Printf("Failed to download %[1]s: %[2]s\n", name, err)
 			}
 		} else if fe.Type == TypeZIPArchive {
 			err = os.RemoveAll(path)

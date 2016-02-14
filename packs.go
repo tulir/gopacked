@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 )
 
-// GoPack is the base struct for a GoPacked modpack.
+// GoPack is the base struct for a goPacked modpack.
 type GoPack struct {
 	Name        string                 `json:"name"`
 	SimpleName  string                 `json:"simplename"`

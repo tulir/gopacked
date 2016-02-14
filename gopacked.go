@@ -30,7 +30,7 @@ import (
 var installPath = flag.StringP("path", "p", "", "")
 var minecraftPath = flag.StringP("minecraft", "m", "", "")
 
-var help = `goPacked 0.1 - Simple command-line modpack manager.
+var help = `goPacked 0.2 - Simple command-line modpack manager.
 
 Usage:
   gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>

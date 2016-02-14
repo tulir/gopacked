@@ -27,7 +27,7 @@ import (
 // FileEntry contains the data of a file or directory.
 type FileEntry struct {
 	Type     string               `json:"type"`
-	FileName string               `json:"filename, omitempty"`
+	FileName string               `json:"filename,omitempty"`
 	Version  string               `json:"version,omitempty"`
 	URL      string               `json:"url,omitempty"`
 	Children map[string]FileEntry `json:"children,omitempty"`

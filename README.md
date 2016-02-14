@@ -1,4 +1,6 @@
 # goPacked
+
+## Introduction
 goPacked is a simple text-based Minecraft modpack manager. It uses a fairly simple JSON pack format.
 
 ## Usage
@@ -23,7 +25,7 @@ Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`
 
 ### Format base
 The JSON base must contain a name, simple name, update URL, author and version. The base must also contain two file entries. "mcl-version" is saved into .minecraft/versions and "files" is saved into the modpacks game directory.
-The base may contain a profile settings block which contains the non-default settings to insert into the modpack profile in Minecraft's launcher_profiles.json.
+The base may contain a profile settings block which contains the non-default settings to insert (as-is) into the modpack profile in Minecraft's launcher_profiles.json.
 
 ```json
 {
@@ -40,18 +42,26 @@ The base may contain a profile settings block which contains the non-default set
     // A directory entry. Will be installed to .minecraft/versions/<simplename>
   },
   "files": {
-    // A directory entry. Will be installed to the modpack game directory, by default .minecraft/gopacked/<simplename>
+    // A directory entry. Will be installed to the modpack game directory.
   }
 }
 ```
 
 ### File entries
-A file entry is a JSON object with at least the type of the entry. The required fields depend on the type of the entry.
-Currently supported types are file and directory. Archive support is coming soon™.
+A file entry is a JSON object with at least the type of the entry. All file entries are parsed as equal, but some fields may be ignored when processing depending on the type of the file entry. The possible file entry fields are as follows:
+ * `type` - Identifies the type of the file entry. Allowed types:
+  * `directory`
+  * `file`
+  * `zip-archive` (upcoming)
+ * `filename` - The name to save the file to. Affects all types, will determine the unarchive directory name for archives.
+ * `version` - The version of the file. Ignored by directories, used for comparison of other types for updating/downgrading.
+ * `url` - The URL to download the file from. Ignored by directories.
+ * `children` - A map of file entries. Ignored by everything but directories.
 
 The display name of the file is the name of the JSON object, but the filesystem name can be overriden using the filename field
 If a custom filename is set, the filename is either the JSON object name (for directories) or the final part of the URL (for files)
 
+#### Examples
 Here's an example of a file entry that doesn't have the filename field set. This file would be saved as "example.jar" by goPacked.
 ```json
 "A file entry": {

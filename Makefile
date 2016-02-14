@@ -21,4 +21,4 @@ windows: $(shell find -name "*.go")
 	mv gopacked_windows.zip build/
 
 clean:
-	rm -f gopacked gopacked.exe gopacked.zip
+	rm -f build/gopacked.deb build/gopacked_windows.zip build/gopacked_linux.zip

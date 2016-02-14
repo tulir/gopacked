@@ -33,9 +33,16 @@ type FileEntry struct {
 	Children map[string]FileEntry `json:"children,omitempty"`
 }
 
+// The possible file types
+const (
+	TypeFile       string = "file"
+	TypeDirectory  string = "directory"
+	TypeZIPArchive string = "zip-archive"
+)
+
 // Install installs the file entry to the given path.
 func (fe FileEntry) Install(path, name string) {
-	if fe.Type == "directory" {
+	if fe.Type == TypeDirectory {
 		fmt.Printf("Creating directory %s\n", name)
 		err := os.MkdirAll(path, 0755)
 		if err != nil {
@@ -44,24 +51,41 @@ func (fe FileEntry) Install(path, name string) {
 		for key, value := range fe.Children {
 			value.Install(value.path(path, key), key)
 		}
-	} else if fe.Type == "file" {
+	} else if fe.Type == TypeFile {
 		fmt.Printf("Downloading %[1]s v%[2]s\n", name, fe.Version)
 		err := downloadFile(fe.URL, path)
 		if err != nil {
 			fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
+		}
+	} else if fe.Type == TypeZIPArchive {
+		fmt.Printf("Downloading and unzipping %[1]s v%[2]s\n", name, fe.Version)
+		err := os.MkdirAll(path, 0755)
+		if err != nil {
+			fmt.Printf("Failed to create directory for %[1]s: %[2]s\n", name, err)
+			return
+		}
+		archivePath := filepath.Join(path, "temp-archive.zip")
+		err = downloadFile(fe.URL, archivePath)
+		if err != nil {
+			fmt.Printf("Failed to download %[1]s: %[2]s\n", name, err)
+			return
+		}
+		err = unzip(archivePath, path)
+		if err != nil {
+			fmt.Printf("Failed to unzip %[1]s: %[2]s\n", name, err)
 		}
 	}
 }
 
 // Remove removes the given FileEntry from the given path.
 func (fe FileEntry) Remove(path, name string) {
-	if fe.Type == "directory" {
+	if fe.Type == TypeDirectory || fe.Type == TypeZIPArchive {
 		fmt.Printf("Removing %[1]s...\n", path)
 		err := os.RemoveAll(path)
 		if err != nil {
 			fmt.Printf("Failed to remove %[1]s: %[2]s\n", path, err)
 		}
-	} else if fe.Type == "file" {
+	} else if fe.Type == TypeFile {
 		fmt.Printf("Removing %[1]s v%[2]s...\n", name, fe.Version)
 		err := os.Remove(path)
 		if err != nil {
@@ -72,7 +96,7 @@ func (fe FileEntry) Remove(path, name string) {
 
 // Update updates this FileEntry to the given new version.
 func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
-	if fe.Type == "directory" {
+	if fe.Type == TypeDirectory {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			fmt.Printf("Creating directory %s\n", name)
 			os.MkdirAll(path, 0755)
@@ -98,7 +122,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 				value.Install(value.path(path, key), key)
 			}
 		}
-	} else if fe.Type == "file" {
+	} else if fe.Type == TypeFile || fe.Type == TypeZIPArchive {
 		// Compare the versions of the new and old file.
 		compare, err := ParseAndCompare(new.Version, fe.Version)
 		if err != nil {
@@ -113,19 +137,24 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 		} else {
 			return
 		}
-		err = os.Remove(path)
-		if err != nil {
-			fmt.Printf("Failed to remove file at %[1]s: %[2]s\n", path, err)
-		}
-		err = downloadFile(new.URL, newpath)
-		if err != nil {
-			fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
+
+		if fe.Type == TypeFile {
+			err = os.Remove(path)
+			if err != nil {
+				fmt.Printf("Failed to remove file at %[1]s: %[2]s\n", path, err)
+			}
+			err = downloadFile(new.URL, newpath)
+			if err != nil {
+				fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
+			}
+		} else if fe.Type == TypeZIPArchive {
+			// TODO implement zip archive update
 		}
 	}
 }
 
 func (fe FileEntry) path(path, name string) string {
-	if fe.Type == "directory" {
+	if fe.Type == TypeDirectory {
 		if len(fe.FileName) != 0 {
 			if fe.FileName != "//" {
 				path = filepath.Join(path, fe.FileName)
@@ -133,7 +162,7 @@ func (fe FileEntry) path(path, name string) string {
 		} else if len(name) != 0 {
 			path = filepath.Join(path, name)
 		}
-	} else if fe.Type == "file" {
+	} else if fe.Type == TypeFile {
 		if len(fe.FileName) != 0 {
 			path = filepath.Join(path, fe.FileName)
 		} else {

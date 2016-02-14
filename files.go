@@ -74,6 +74,10 @@ func (fe FileEntry) Install(path, name string) {
 		if err != nil {
 			fmt.Printf("Failed to unzip %[1]s: %[2]s\n", name, err)
 		}
+		err = os.Remove(archivePath)
+		if err != nil {
+			fmt.Printf("Failed to remove temp archive file: %[1]s\n", err)
+		}
 	}
 }
 
@@ -148,7 +152,29 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 				fmt.Printf("Failed to install %[1]s: %[2]s\n", name, err)
 			}
 		} else if fe.Type == TypeZIPArchive {
-			// TODO implement zip archive update
+			err = os.RemoveAll(path)
+			if err != nil {
+				fmt.Printf("Failed to remove directory at %[1]s: %[2]s\n", path, err)
+			}
+			err := os.MkdirAll(newpath, 0755)
+			if err != nil {
+				fmt.Printf("Failed to create directory for %[1]s: %[2]s\n", name, err)
+				return
+			}
+			archivePath := filepath.Join(newpath, "temp-archive.zip")
+			err = downloadFile(fe.URL, archivePath)
+			if err != nil {
+				fmt.Printf("Failed to download %[1]s: %[2]s\n", name, err)
+				return
+			}
+			err = unzip(archivePath, newpath)
+			if err != nil {
+				fmt.Printf("Failed to unzip %[1]s: %[2]s\n", name, err)
+			}
+			err = os.Remove(archivePath)
+			if err != nil {
+				fmt.Printf("Failed to remove temp archive file: %[1]s\n", err)
+			}
 		}
 	}
 }

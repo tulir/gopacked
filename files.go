@@ -180,7 +180,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 }
 
 func (fe FileEntry) path(path, name string) string {
-	if fe.Type == TypeDirectory {
+	if fe.Type == TypeDirectory || fe.Type == TypeZIPArchive {
 		if len(fe.FileName) != 0 {
 			if fe.FileName != "//" {
 				path = filepath.Join(path, fe.FileName)

@@ -125,7 +125,7 @@ func main() {
 			}
 
 			if len(updated.Name) == 0 {
-				Infof("Fetching updated goPack definition from", gp.UpdateURL)
+				Infof("Fetching updated goPack definition from %s", gp.UpdateURL)
 				err := fetchDefinition(&updated, gp.UpdateURL)
 				if err != nil {
 					Fatalf("Failed to updated goPack definition: %s", err)

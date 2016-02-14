@@ -69,10 +69,10 @@ func main() {
 	action := strings.ToLower(flag.Arg(0))
 	var gp GoPack
 	if action == "install" && flag.NArg() > 1 {
-		fmt.Println("Fetching goPack definition from", flag.Arg(1))
+		Infof("Fetching goPack definition from %s", flag.Arg(1))
 		err := fetchDefinition(&gp, flag.Arg(1))
 		if err != nil {
-			fmt.Println("[Fatal] Failed to fetch goPack definition:", err)
+			Fatalf("Failed to fetch goPack definition: %s", err)
 			return
 		}
 
@@ -83,31 +83,31 @@ func main() {
 		gp.Install(*installPath, *minecraftPath)
 	} else if action == "uninstall" || action == "update" {
 		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
-			fmt.Println("[Fatal] goPack URL or install location not specified!")
+			Fatalf("goPack URL or install location not specified!")
 			return
 		}
 
 		var updated GoPack
 		if flag.NArg() > 1 {
 			if strings.HasPrefix(flag.Arg(1), "http") {
-				fmt.Println("Fetching goPack definition from", flag.Arg(1))
+				Infof("Fetching goPack definition from %s", flag.Arg(1))
 				err := fetchDefinition(&updated, flag.Arg(1))
 				if err != nil {
-					fmt.Println("[Fatal] Failed to fetch goPack definition:", err)
+					Fatalf("Failed to fetch goPack definition: %s", err)
 				}
 			} else {
 				*installPath = filepath.Join(*minecraftPath, "gopacked", flag.Arg(1))
-				fmt.Println("Reading goPack definition from", *installPath)
+				Infof("Reading goPack definition from %s", *installPath)
 				err := readDefinition(&gp, *installPath)
 				if err != nil {
-					fmt.Println("[Fatal] Failed to read goPack definition:", err)
+					Fatalf("Failed to read goPack definition: %s", err)
 				}
 			}
 		} else {
-			fmt.Println("Reading goPack definition from", *installPath)
+			Infof("Reading goPack definition from %s", *installPath)
 			err := readDefinition(&gp, *installPath)
 			if err != nil {
-				fmt.Println("[Fatal] Failed to read goPack definition:", err)
+				Fatalf("Failed to read goPack definition: %s", err)
 			}
 		}
 
@@ -117,18 +117,18 @@ func main() {
 
 		if action == "update" {
 			if len(gp.Name) == 0 {
-				fmt.Println("Reading installed goPack definition from", *installPath)
+				Infof("Reading installed goPack definition from %s", *installPath)
 				err := readDefinition(&gp, *installPath)
 				if err != nil {
-					fmt.Println("[Fatal] Failed to read local goPack definition:", err)
+					Fatalf("Failed to read local goPack definition: %s", err)
 				}
 			}
 
 			if len(updated.Name) == 0 {
-				fmt.Println("Fetching updated goPack definition from", gp.UpdateURL)
+				Infof("Fetching updated goPack definition from", gp.UpdateURL)
 				err := fetchDefinition(&updated, gp.UpdateURL)
 				if err != nil {
-					fmt.Println("[Fatal] Failed to updated goPack definition:", err)
+					Fatalf("Failed to updated goPack definition: %s", err)
 				}
 			}
 

@@ -3,11 +3,10 @@ install: $(shell find -name "*.go")
 
 debian: $(shell find -name "*.go")
 	go build
-	cd build
-	rm gopacked/usr/local/bin/gopacked
-	mv ../gopacked gopacked/usr/local/
-	nano DEBIAN/control
-	dpkg-deb --build gopacked
+	rm -f build/gopacked/usr/local/bin/gopacked
+	mv gopacked build/gopacked/usr/local/
+	nano build/gopacked/DEBIAN/control
+	dpkg-deb --build build/gopacked
 
 linux: $(shell find -name "*.go")
 	go build

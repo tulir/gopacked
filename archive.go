@@ -16,11 +16,81 @@
 package main
 
 import (
+	"archive/tar"
 	"archive/zip"
+	"bytes"
+	"compress/bzip2"
+	"compress/gzip"
 	"io"
 	"os"
 	"path/filepath"
 )
+
+func untargz(from io.Reader, target string) error {
+	var buf bytes.Buffer
+	err := ungz(from, &buf)
+	if err != nil {
+		return err
+	}
+	return untar(&buf, target)
+}
+
+func untarbz2(from io.Reader, target string) error {
+	var buf bytes.Buffer
+	err := unbz2(from, &buf)
+	if err != nil {
+		return err
+	}
+	return untar(&buf, target)
+}
+
+func ungz(from io.Reader, to io.Writer) error {
+	reader, err := gzip.NewReader(from)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(to, reader)
+	return err
+}
+
+func unbz2(from io.Reader, to io.Writer) error {
+	reader := bzip2.NewReader(from)
+	_, err := io.Copy(to, reader)
+	return err
+}
+
+func untar(from io.Reader, target string) error {
+	tarReader := tar.NewReader(from)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		path := filepath.Join(target, header.Name)
+		info := header.FileInfo()
+		if info.IsDir() {
+			if err = os.MkdirAll(path, info.Mode()); err != nil {
+				return err
+			}
+			continue
+		}
+
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(file, tarReader)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func unzip(archive, target string) error {
 	reader, err := zip.OpenReader(archive)

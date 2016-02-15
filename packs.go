@@ -19,8 +19,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Jeffail/gabs"
+	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -31,6 +33,7 @@ type GoPack struct {
 	UpdateURL   string                 `json:"update-url"`
 	Author      string                 `json:"author"`
 	Version     string                 `json:"version"`
+	ForgeVer    string                 `json:"forge-version,omitempty"`
 	ProfileArgs map[string]interface{} `json:"profile-settings"`
 	MCLVersion  FileEntry              `json:"mcl-version"`
 	Files       FileEntry              `json:"files"`
@@ -101,6 +104,35 @@ func (gp GoPack) UninstallProfile(path, mcPath string) error {
 	return nil
 }
 
+// InstallForge installs the required version of forge for this gopack.
+func (gp GoPack) InstallForge(path, mcPath, side string) {
+	if len(gp.ForgeVer) == 0 {
+		return
+	}
+
+	installerURL := fmt.Sprintf("http://files.minecraftforge.net/maven/net/minecraftforge/forge/%[1]s/forge-%[1]s-installer.jar", gp.ForgeVer)
+	installerPath := filepath.Join(path, "forge-installer.jar")
+	downloadFile(installerURL, installerPath)
+	var cmd *exec.Cmd
+	if side == "client" {
+		exec.Command("java", "-jar", installerPath)
+	} else {
+		exec.Command("java", "-jar", installerPath, "--installServer")
+	}
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+
+	oldDir, _ := os.Getwd()
+	os.Chdir(path)
+	cmd.Start()
+	go io.Copy(os.Stdout, stdout)
+	go io.Copy(os.Stderr, stderr)
+	cmd.Wait()
+	if len(oldDir) != 0 {
+		os.Chdir(oldDir)
+	}
+}
+
 // Install installs the GoPack to the given path and minecraft directory.
 func (gp GoPack) Install(path, mcPath, side string) {
 	var err error
@@ -123,6 +155,7 @@ func (gp GoPack) Install(path, mcPath, side string) {
 
 		gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
 	}
+	gp.InstallForge(path, mcPath, side)
 	gp.Files.Install(path, "", side)
 
 	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))

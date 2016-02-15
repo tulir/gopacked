@@ -30,6 +30,8 @@ import (
 var installPath = flag.StringP("path", "p", "", "")
 var minecraftPath = flag.StringP("minecraft", "m", "", "")
 
+var side = flag.StringP("side", "s", "client", "")
+
 var help = `goPacked 0.2 - Simple command-line modpack manager.
 
 Usage:
@@ -41,11 +43,12 @@ Available actions:
   uninstall                Uninstall the modpack by URL, name or install path.
 
 Help options:
-  -h, --help               Show this help page
+  -h, --help               Show this help page.
 
 Application options:
   -p, --path=PATH          The path to save the modpack in.
-  -m, --minecraft=PATH     The minecraft directory`
+  -m, --minecraft=PATH     The minecraft directory.
+  -s, --side=SIDE          The side (client or server) to install.`
 
 func init() {
 	flag.Usage = func() {
@@ -63,9 +66,19 @@ func init() {
 			*minecraftPath = filepath.Join(os.Getenv("HOME"), ".minecraft")
 		}
 	}
+
+	*side = strings.ToLower(*side)
+	if *side != "client" && *side != "server" {
+		Fatalf("Couldn't recognize side %[1]s!", *side)
+		os.Exit(1)
+	}
 }
 
 func main() {
+	if *side == "server" && runtime.GOOS != "windows" {
+		*minecraftPath = os.Getenv("HOME")
+	}
+
 	action := strings.ToLower(flag.Arg(0))
 	var gp GoPack
 	if action == "install" && flag.NArg() > 1 {
@@ -80,7 +93,7 @@ func main() {
 			*installPath = filepath.Join(*minecraftPath, "gopacked", gp.SimpleName)
 		}
 
-		gp.Install(*installPath, *minecraftPath)
+		gp.Install(*installPath, *minecraftPath, *side)
 	} else if action == "uninstall" || action == "update" {
 		if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
 			Fatalf("goPack URL or install location not specified!")
@@ -132,9 +145,9 @@ func main() {
 				}
 			}
 
-			gp.Update(updated, *installPath, *minecraftPath)
+			gp.Update(updated, *installPath, *minecraftPath, *side)
 		} else if action == "uninstall" {
-			gp.Uninstall(*installPath, *minecraftPath)
+			gp.Uninstall(*installPath, *minecraftPath, *side)
 		}
 	} else {
 		flag.Usage()

@@ -28,6 +28,7 @@ type FileEntry struct {
 	Type     string               `json:"type"`
 	FileName string               `json:"filename,omitempty"`
 	Version  string               `json:"version,omitempty"`
+	Side     string               `json:"side,omitempty"`
 	URL      string               `json:"url,omitempty"`
 	Children map[string]FileEntry `json:"children,omitempty"`
 }
@@ -40,7 +41,10 @@ const (
 )
 
 // Install installs the file entry to the given path.
-func (fe FileEntry) Install(path, name string) {
+func (fe FileEntry) Install(path, name, side string) {
+	if !fe.checkSide(side) {
+		return
+	}
 	if fe.Type == TypeDirectory {
 		Infof("Creating directory %s", name)
 		err := os.MkdirAll(path, 0755)
@@ -48,7 +52,7 @@ func (fe FileEntry) Install(path, name string) {
 			Warnf("Failed to create %[1]s: %[2]s", name, err)
 		}
 		for key, value := range fe.Children {
-			value.Install(value.path(path, key), key)
+			value.Install(value.path(path, key), key, side)
 		}
 	} else if fe.Type == TypeFile {
 		Infof("Downloading %[1]s v%[2]s", name, fe.Version)
@@ -81,7 +85,10 @@ func (fe FileEntry) Install(path, name string) {
 }
 
 // Remove removes the given FileEntry from the given path.
-func (fe FileEntry) Remove(path, name string) {
+func (fe FileEntry) Remove(path, name, side string) {
+	if !fe.checkSide(side) {
+		return
+	}
 	if fe.Type == TypeDirectory || fe.Type == TypeZIPArchive {
 		Infof("Removing %[1]s...", path)
 		err := os.RemoveAll(path)
@@ -98,7 +105,10 @@ func (fe FileEntry) Remove(path, name string) {
 }
 
 // Update updates this FileEntry to the given new version.
-func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
+func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
+	if !fe.checkSide(side) {
+		return
+	}
 	if fe.Type == TypeDirectory {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			Infof("Creating directory %s", name)
@@ -110,10 +120,10 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 			newVal, ok := new.Children[key]
 			if ok {
 				// File already exists, call Update
-				value.Update(newVal, value.path(path, key), newVal.path(path, key), key)
+				value.Update(newVal, value.path(path, key), newVal.path(path, key), key, side)
 			} else {
 				// File no longer exists, call Remove
-				value.Remove(value.path(path, key), key)
+				value.Remove(value.path(path, key), key, side)
 			}
 		}
 
@@ -122,7 +132,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string) {
 			_, ok := fe.Children[key]
 			if !ok {
 				// File didn't exist before, call Install
-				value.Install(value.path(path, key), key)
+				value.Install(value.path(path, key), key, side)
 			}
 		}
 	} else if fe.Type == TypeFile || fe.Type == TypeZIPArchive {
@@ -196,6 +206,10 @@ func (fe FileEntry) path(path, name string) string {
 		}
 	}
 	return path
+}
+
+func (fe FileEntry) checkSide(side string) bool {
+	return len(side) == 0 || side == fe.Side || side == "both"
 }
 
 func downloadFile(url, saveTo string) error {

@@ -102,7 +102,7 @@ func (gp GoPack) UninstallProfile(path, mcPath string) error {
 }
 
 // Install installs the GoPack to the given path and minecraft directory.
-func (gp GoPack) Install(path, mcPath string) {
+func (gp GoPack) Install(path, mcPath, side string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
@@ -113,15 +113,17 @@ func (gp GoPack) Install(path, mcPath string) {
 		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
 	}
 
-	Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s", gp.Name, gp.Version, gp.Author, path)
+	Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
-	err = gp.InstallProfile(path, mcPath)
-	if err != nil {
-		Errorf("Profile install failed: %s", err)
+	if side == "client" {
+		err = gp.InstallProfile(path, mcPath)
+		if err != nil {
+			Errorf("Profile install failed: %s", err)
+		}
+
+		gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
 	}
-
-	gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "")
-	gp.Files.Install(path, "")
+	gp.Files.Install(path, "", side)
 
 	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = gp.Save(filepath.Join(path, "gopacked.json"))
@@ -131,7 +133,7 @@ func (gp GoPack) Install(path, mcPath string) {
 }
 
 // Update this GoPack.
-func (gp GoPack) Update(new GoPack, path, mcPath string) {
+func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
@@ -142,15 +144,17 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
 	}
 
-	Infof("Updating %[1]s by %[3]s", gp.Name, gp.Version, gp.Author, path)
+	Infof("Updating %[1]s by %[3]s to v%[2]s (%[4]s-side)", gp.Name, gp.Version, gp.Author, side)
 
-	err = gp.InstallProfile(path, mcPath)
-	if err != nil {
-		Errorf("Profile install failed: %s", err)
+	if side == "client" {
+		err = gp.InstallProfile(path, mcPath)
+		if err != nil {
+			Errorf("Profile install failed: %s", err)
+		}
+
+		gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "", side)
 	}
-
-	gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "")
-	gp.Files.Update(new.Files, path, path, "")
+	gp.Files.Update(new.Files, path, path, "", side)
 
 	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = new.Save(filepath.Join(path, "gopacked.json"))
@@ -160,7 +164,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath string) {
 }
 
 // Uninstall this GoPack.
-func (gp GoPack) Uninstall(path, mcPath string) {
+func (gp GoPack) Uninstall(path, mcPath, side string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
@@ -171,15 +175,17 @@ func (gp GoPack) Uninstall(path, mcPath string) {
 		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
 	}
 
-	Infof("Uninstalling %[1]s by %[2]s from %[3]s", gp.Name, gp.Version, path)
+	Infof("Uninstalling %[1]s v%[2]s by %[3]s from %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
-	err = gp.UninstallProfile(path, mcPath)
-	if err != nil {
-		Errorf("Profile uninstall failed: %s", err)
+	if side == "client" {
+		err = gp.UninstallProfile(path, mcPath)
+		if err != nil {
+			Errorf("Profile uninstall failed: %s", err)
+		}
+
+		gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
 	}
-
-	gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "")
-	gp.Files.Remove(path, "")
+	gp.Files.Remove(path, "", side)
 	os.RemoveAll(path)
 }
 

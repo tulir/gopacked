@@ -244,6 +244,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 		gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "", side)
 	}
 	gp.Files.Update(new.Files, path, path, "", side)
+	gp.InstallForge(path, mcPath, side)
 
 	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = new.Save(filepath.Join(path, "gopacked.json"))

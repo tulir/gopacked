@@ -50,11 +50,12 @@ Help options:
 Application options:
   -p, --path=PATH          The path to save the modpack in.
   -m, --minecraft=PATH     The minecraft directory.
-  -s, --side=SIDE          The side (client or server) to install.`
+  -s, --side=SIDE          The side (client or server) to install.
+`
 
 func init() {
 	flag.Usage = func() {
-		println(help)
+		os.Stdout.Write([]byte(help))
 	}
 	flag.Parse()
 

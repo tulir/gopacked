@@ -73,6 +73,10 @@ func (ver Version) IsSmaller(ver2 Version) bool {
 	return ver.Compare(ver2) == -1
 }
 
+func (ver Version) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d", ver.Level1, ver.Level2, ver.Level3, ver.Level4)
+}
+
 // ParseAndCompare parses a version out of the two strings and compares them.
 func ParseAndCompare(str1, str2 string) (int, error) {
 	ver1, err := ParseVersion(str1)

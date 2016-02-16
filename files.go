@@ -209,7 +209,7 @@ func (fe FileEntry) path(path, name string) string {
 }
 
 func (fe FileEntry) checkSide(side string) bool {
-	return len(side) == 0 || side == fe.Side || side == "both"
+	return len(fe.Side) == 0 || side == fe.Side || side == "both"
 }
 
 func downloadFile(url, saveTo string) error {

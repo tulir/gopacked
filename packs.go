@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Jeffail/gabs"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -124,16 +123,11 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 	} else {
 		cmd = exec.Command("java", "-jar", installerPath, "--installServer")
 	}
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
 
 	Infof("Starting Forge installer...")
 	oldDir, _ := os.Getwd()
 	os.Chdir(path)
-	cmd.Start()
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
-	cmd.Wait()
+	cmd.Run()
 	if len(oldDir) != 0 {
 		os.Chdir(oldDir)
 	}

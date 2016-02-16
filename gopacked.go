@@ -32,7 +32,9 @@ var minecraftPath = flag.StringP("minecraft", "m", "", "")
 
 var side = flag.StringP("side", "s", "client", "")
 
-var help = `goPacked 0.2 - Simple command-line modpack manager.
+var version = Version{0, 2, 0, 0}
+
+const help = `goPacked 0.2 - Simple command-line modpack manager.
 
 Usage:
   gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>

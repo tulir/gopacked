@@ -112,6 +112,14 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 		return
 	}
 
+	fmt.Printf("Would you like to install Forge v%s [y/N] ", gp.ForgeVer)
+	bio := bufio.NewReader(os.Stdin)
+	line, _ := bio.ReadString('\n')
+	linec := []rune(line)
+	if linec[0] != 'y' && linec[0] != 'Y' {
+		return
+	}
+
 	Infof("Downloading Forge v%[1]s installer", gp.ForgeVer)
 
 	installerURL := fmt.Sprintf("http://files.minecraftforge.net/maven/net/minecraftforge/forge/%[1]s/forge-%[1]s-installer.jar", gp.ForgeVer)

@@ -16,6 +16,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/Jeffail/gabs"
@@ -34,6 +35,8 @@ type GoPack struct {
 	Author      string                 `json:"author"`
 	Version     string                 `json:"version"`
 	ForgeVer    string                 `json:"forge-version,omitempty"`
+	GoPackedMin string                 `json:"gopacked-version-minimum,omitempty"`
+	GoPackedMax string                 `json:"gopacked-version-maximum,omitempty"`
 	ProfileArgs map[string]interface{} `json:"profile-settings"`
 	MCLVersion  FileEntry              `json:"mcl-version"`
 	Files       FileEntry              `json:"files"`
@@ -133,8 +136,49 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 	}
 }
 
+// CheckVersion checks whether or not the goPacked instance is within the version requirements of this goPack.
+func (gp GoPack) CheckVersion() bool {
+	var continueAsk = false
+	if len(gp.GoPackedMax) != 0 {
+		gpVer, err := ParseVersion(gp.GoPackedMax)
+		if err != nil {
+			Warnf("Failed to parse maximum supported goPacked version")
+			continueAsk = true
+		}
+		if gpVer.Compare(version) == 1 {
+			Warnf("goPacked version greater than maximum supported by requested goPack.")
+			continueAsk = true
+		}
+	}
+	if len(gp.GoPackedMin) != 0 {
+		gpVer, err := ParseVersion(gp.GoPackedMin)
+		if err != nil {
+			Warnf("Failed to parse minimum supported goPacked version")
+			continueAsk = true
+		}
+		if gpVer.Compare(version) == -1 {
+			Warnf("goPacked version smaller than minimum supported by requested goPack.")
+			continueAsk = true
+		}
+	}
+	if continueAsk {
+		fmt.Print("Would you like to continue anyway [y/N] ")
+		bio := bufio.NewReader(os.Stdin)
+		line, _ := bio.ReadString('\n')
+		linec := []rune(line)
+		if linec[0] != 'y' && linec[0] != 'Y' {
+			return false
+		}
+	}
+	return true
+}
+
 // Install installs the GoPack to the given path and minecraft directory.
 func (gp GoPack) Install(path, mcPath, side string) {
+	if !gp.CheckVersion() {
+		return
+	}
+
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
@@ -167,6 +211,10 @@ func (gp GoPack) Install(path, mcPath, side string) {
 
 // Update this GoPack.
 func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
+	if !new.CheckVersion() {
+		return
+	}
+
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
@@ -198,6 +246,15 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 
 // Uninstall this GoPack.
 func (gp GoPack) Uninstall(path, mcPath, side string) {
+	fmt.Printf("Are you sure you wish to uninstall %s v%s [y/N] ", gp.Name, gp.Version)
+	bio := bufio.NewReader(os.Stdin)
+	line, _ := bio.ReadString('\n')
+	linec := []rune(line)
+	if linec[0] != 'y' && linec[0] != 'Y' {
+		Infof("Uninstall cancelled")
+		return
+	}
+
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {

@@ -16,6 +16,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 )
@@ -25,6 +26,15 @@ var warnPrefix = []byte("\x1b[33m[Warning] ")
 var errorPrefix = []byte("\x1b[31m[Error] ")
 var fatalPrefix = []byte("\x1b[35m[Fatal] ")
 var newline = []byte("\x1b[0m\n")
+
+// Inputf prints the given message and then waits for input
+func Inputf(message string, args ...interface{}) string {
+	os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
+	os.Stdout.Write([]byte(" "))
+	bio := bufio.NewReader(os.Stdin)
+	line, _ := bio.ReadString('\n')
+	return line
+}
 
 // Infof formats and prints the given message into stdout
 func Infof(message string, args ...interface{}) {

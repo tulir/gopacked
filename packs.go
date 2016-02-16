@@ -16,7 +16,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/Jeffail/gabs"
@@ -112,10 +111,7 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 		return
 	}
 
-	fmt.Printf("Would you like to install Forge v%s [y/N] ", gp.ForgeVer)
-	bio := bufio.NewReader(os.Stdin)
-	line, _ := bio.ReadString('\n')
-	linec := []rune(line)
+	linec := []rune(Inputf("Would you like to install Forge v%s [y/N] ", gp.ForgeVer))
 	if linec[0] != 'y' && linec[0] != 'Y' {
 		return
 	}
@@ -169,10 +165,7 @@ func (gp GoPack) CheckVersion() bool {
 		}
 	}
 	if continueAsk {
-		fmt.Print("Would you like to continue anyway [y/N] ")
-		bio := bufio.NewReader(os.Stdin)
-		line, _ := bio.ReadString('\n')
-		linec := []rune(line)
+		linec := []rune(Inputf("Would you like to continue anyway [y/N]"))
 		if linec[0] != 'y' && linec[0] != 'Y' {
 			return false
 		}
@@ -255,10 +248,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 
 // Uninstall this GoPack.
 func (gp GoPack) Uninstall(path, mcPath, side string) {
-	fmt.Printf("Are you sure you wish to uninstall %s v%s [y/N] ", gp.Name, gp.Version)
-	bio := bufio.NewReader(os.Stdin)
-	line, _ := bio.ReadString('\n')
-	linec := []rune(line)
+	linec := []rune(Inputf("Are you sure you wish to uninstall %s v%s [y/N] ", gp.Name, gp.Version))
 	if linec[0] != 'y' && linec[0] != 'Y' {
 		Infof("Uninstall cancelled")
 		return

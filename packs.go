@@ -131,6 +131,7 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 	if len(oldDir) != 0 {
 		os.Chdir(oldDir)
 	}
+	os.Remove(installerPath)
 	Infof("Forge installer finised")
 }
 

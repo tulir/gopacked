@@ -113,18 +113,21 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 		return
 	}
 
+	Infof("Downloading Forge v%[1]s installer", gp.ForgeVer)
+
 	installerURL := fmt.Sprintf("http://files.minecraftforge.net/maven/net/minecraftforge/forge/%[1]s/forge-%[1]s-installer.jar", gp.ForgeVer)
 	installerPath := filepath.Join(path, "forge-installer.jar")
 	downloadFile(installerURL, installerPath)
 	var cmd *exec.Cmd
 	if side == "client" {
-		exec.Command("java", "-jar", installerPath)
+		cmd = exec.Command("java", "-jar", installerPath)
 	} else {
-		exec.Command("java", "-jar", installerPath, "--installServer")
+		cmd = exec.Command("java", "-jar", installerPath, "--installServer")
 	}
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 
+	Infof("Starting Forge installer...")
 	oldDir, _ := os.Getwd()
 	os.Chdir(path)
 	cmd.Start()
@@ -134,6 +137,7 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 	if len(oldDir) != 0 {
 		os.Chdir(oldDir)
 	}
+	Infof("Forge installer finised")
 }
 
 // CheckVersion checks whether or not the goPacked instance is within the version requirements of this goPack.
@@ -146,7 +150,7 @@ func (gp GoPack) CheckVersion() bool {
 			continueAsk = true
 		}
 		if gpVer.Compare(version) == 1 {
-			Warnf("goPacked version greater than maximum supported by requested goPack.")
+			Warnf("goPacked version greater than maximum supported by requested goPack")
 			continueAsk = true
 		}
 	}
@@ -157,7 +161,7 @@ func (gp GoPack) CheckVersion() bool {
 			continueAsk = true
 		}
 		if gpVer.Compare(version) == -1 {
-			Warnf("goPacked version smaller than minimum supported by requested goPack.")
+			Warnf("goPacked version smaller than minimum supported by requested goPack")
 			continueAsk = true
 		}
 	}
@@ -184,6 +188,7 @@ func (gp GoPack) Install(path, mcPath, side string) {
 	if err != nil {
 		Warnf("Failed to get absolute version of %s: %s", path, err)
 	}
+	os.MkdirAll(path, 0755)
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
 		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
@@ -199,8 +204,8 @@ func (gp GoPack) Install(path, mcPath, side string) {
 
 		gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
 	}
-	gp.InstallForge(path, mcPath, side)
 	gp.Files.Install(path, "", side)
+	gp.InstallForge(path, mcPath, side)
 
 	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = gp.Save(filepath.Join(path, "gopacked.json"))

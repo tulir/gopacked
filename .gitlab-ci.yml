@@ -3,6 +3,7 @@ image: golang:1.6
 before_script:
   - "go get -u github.com/Jeffail/gabs"
   - "go get -u github.com/ogier/pflag"
+  - "mkdir -p /go/src/maunium.net/go"
   - "ln -s /builds/Tulir293/gopacked /go/src/maunium.net/go/gopacked"
 
 build:

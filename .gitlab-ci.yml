@@ -1,0 +1,22 @@
+image: golang:1.6
+
+before_script:
+  - "go get -u github.com/Jeffail/gabs"
+  - "go get -u github.com/ogier/pflag"
+  - "ln -s /builds/Tulir293/gopacked /go/src/maunium.net/go/gopacked"
+
+build:
+  script:
+    - "env GOOS=linux GOARCH=amd64 go build -o gopacked"
+    - "env GOOS=windows GOARCH=amd64 go build -o gopacked.exe"
+  stage: build
+  tags:
+    - golang
+  artifacts:
+    paths:
+    - gopacked
+    - gopacked.exe
+    - LICENSE
+    - GABS_LICENSE
+    - PFLAG_LICENSE
+    - README.md

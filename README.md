@@ -7,15 +7,17 @@ goPacked is a simple text-based Minecraft modpack manager. It uses a fairly simp
 ### Precompiled
 There are compiled versions available for Linux and Windows. The latest version is always available from the following links
  * Debian package: https://dl.maunium.net/programs/gopacked.deb
- * Other Linuxes: https://dl.maunium.net/programs/gopacked_linux.zip
+ * Other Linuxes: https://dl.maunium.net/programs/gopacked_linux.tar.gz
  * Windows: https://dl.maunium.net/programs/gopacked_windows.zip
 
 ### Self-compiled
-You may also compile the program yourself. Development is done using the latest version of Go (currently 1.5.3), so that is the recommended version to use when compiling. You can download go from https://golang.org/
+You may also compile the program yourself. Development is done using the latest version of Go (currently 1.6.2), so that is the recommended version to use when compiling. You can download go from https://golang.org/
 
-You must have the following libraries installed to compile goPacked (easiest to install using `go get`)
+You must have the following libraries installed to compile goPacked.
 * Gabs by Ashley Jeffs: https://github.com/Jeffail/gabs ([license](https://github.com/Jeffail/gabs/blob/master/LICENSE))
 * pflag by Alex Ogier: https://github.com/ogier/pflag ([license](https://github.com/ogier/pflag/blob/master/LICENSE))
+
+The easiest way to download goPacked source and all necessary libraries is to use `go get maunium.net/go/gopacked`
 
 ## Usage
 Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`

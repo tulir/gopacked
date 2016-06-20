@@ -29,6 +29,7 @@ import (
 
 var installPath = flag.Make().LongKey("path").ShortKey("p").String()
 var minecraftPath = flag.Make().LongKey("minecraft").ShortKey("m").String()
+var wantHelp = flag.Make().LongKey("help").ShortKey("h").Bool()
 
 var side = flag.Make().LongKey("side").ShortKey("s").Default(CLIENT).String()
 
@@ -65,6 +66,9 @@ func init() {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stdout, help)
 		os.Exit(1)
+	} else if *wantHelp {
+		fmt.Fprintln(os.Stdout, help)
+		os.Exit(0)
 	}
 
 	if minecraftPath == nil || len(*minecraftPath) == 0 {
@@ -81,7 +85,7 @@ func init() {
 	*side = strings.ToLower(*side)
 	if *side != CLIENT && *side != SERVER {
 		Fatalf("Couldn't recognize side %[1]s!", *side)
-		os.Exit(1)
+		os.Exit(2)
 	}
 }
 

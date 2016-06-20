@@ -1,8 +1,7 @@
 image: golang:1.6
 
 before_script:
-  - "go get -u github.com/Jeffail/gabs"
-  - "go get -u github.com/ogier/pflag"
+  - "go get -u maunium.net/go/mauflag"
   - "mkdir -p /go/src/maunium.net/go"
   - "ln -s /builds/Tulir293/gopacked /go/src/maunium.net/go/gopacked"
 
@@ -18,6 +17,4 @@ build:
     - gopacked
     - gopacked.exe
     - LICENSE
-    - GABS_LICENSE
-    - PFLAG_LICENSE
     - README.md

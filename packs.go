@@ -122,7 +122,7 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 	installerPath := filepath.Join(path, "forge-installer.jar")
 	downloadFile(installerURL, installerPath)
 	var cmd *exec.Cmd
-	if side == "client" {
+	if side == CLIENT {
 		cmd = exec.Command("java", "-jar", installerPath)
 	} else {
 		cmd = exec.Command("java", "-jar", installerPath, "--installServer")
@@ -192,7 +192,7 @@ func (gp GoPack) Install(path, mcPath, side string) {
 
 	Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
-	if side == "client" {
+	if side == CLIENT {
 		err = gp.InstallProfile(path, mcPath)
 		if err != nil {
 			Errorf("Profile install failed: %s", err)
@@ -228,7 +228,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 
 	Infof("Updating %[1]s by %[3]s to v%[2]s (%[4]s-side)", gp.Name, gp.Version, gp.Author, side)
 
-	if side == "client" {
+	if side == CLIENT {
 		err = gp.InstallProfile(path, mcPath)
 		if err != nil {
 			Errorf("Profile install failed: %s", err)
@@ -266,7 +266,7 @@ func (gp GoPack) Uninstall(path, mcPath, side string) {
 
 	Infof("Uninstalling %[1]s v%[2]s by %[3]s from %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
-	if side == "client" {
+	if side == CLIENT {
 		err = gp.UninstallProfile(path, mcPath)
 		if err != nil {
 			Errorf("Profile uninstall failed: %s", err)

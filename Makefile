@@ -10,13 +10,13 @@ debian: $(shell find -name "*.go")
 
 linux: $(shell find -name "*.go")
 	go build
-	zip -9r gopacked_linux.zip gopacked LICENSE GABS_LICENSE PFLAG_LICENSE README.md
+	zip -9r gopacked_linux.zip gopacked LICENSE README.md
 	rm -f gopacked
 	mv gopacked_linux.zip build/
 
 windows: $(shell find -name "*.go")
 	env GOOS=windows go build
-	zip -9r gopacked_windows.zip gopacked.exe LICENSE GABS_LICENSE PFLAG_LICENSE README.md
+	zip -9r gopacked_windows.zip gopacked.exe LICENSE README.md
 	rm -f gopacked.exe
 	mv gopacked_windows.zip build/
 

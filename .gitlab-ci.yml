@@ -2,6 +2,7 @@ image: golang:1.6
 
 before_script:
   - "go get -u maunium.net/go/mauflag"
+  - "go get -u github.com/Jeffail/gabs"
   - "mkdir -p /go/src/maunium.net/go"
   - "ln -s /builds/Tulir293/gopacked /go/src/maunium.net/go/gopacked"
 

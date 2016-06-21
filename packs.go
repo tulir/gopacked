@@ -18,7 +18,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Jeffail/gabs"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -40,6 +39,16 @@ type GoPack struct {
 	Files       FileEntry              `json:"files"`
 }
 
+// LauncherProfiles is a Minecraft launcher_profiles.json file container
+type LauncherProfiles struct {
+	Profiles        map[string]map[string]interface{} `json:"profiles"`
+	AuthDB          map[string]map[string]interface{} `json:"authenticationDatabase"`
+	SelectedProfile string                            `json:"selectedProfile"`
+	ClientToken     string                            `json:"clientToken"`
+	SelectedUser    string                            `json:"selectedUser"`
+	LauncherVersion map[string]interface{}            `json:"launcherVersion"`
+}
+
 // InstallProfile installs the profile data into launcher_profiles.json
 func (gp GoPack) InstallProfile(path, mcPath string) error {
 	profileData, err := ioutil.ReadFile(filepath.Join(mcPath, "launcher_profiles.json"))
@@ -47,33 +56,29 @@ func (gp GoPack) InstallProfile(path, mcPath string) error {
 		return fmt.Errorf("Failed to read file: %s", err)
 	}
 
-	profiles, err := gabs.ParseJSON(profileData)
+	var profiles LauncherProfiles
+	err = json.Unmarshal(profileData, &profiles)
 	if err != nil {
 		return fmt.Errorf("Failed to parse JSON: %s", err)
 	}
 
 	Infof("Adding %s to launcher_profiles.json", gp.Name)
 
-	_, err = profiles.Set(gp.Name, "profiles", gp.Name, "name")
-	if err != nil {
-		return fmt.Errorf("Failed to edit JSON: %s", err)
+	var profile = make(map[string]interface{})
+	profile["name"] = gp.Name
+	profile["gameDir"] = path
+	profile["lastVersionId"] = gp.SimpleName
+	for key, value := range gp.ProfileArgs {
+		profile[key] = value
 	}
-	_, err = profiles.Set(path, "profiles", gp.Name, "gameDir")
+	profiles.Profiles[gp.Name] = profile
+
+	profileData, err = json.MarshalIndent(&profiles, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Failed to edit JSON: %s", err)
-	}
-	_, err = profiles.Set(gp.SimpleName, "profiles", gp.Name, "lastVersionId")
-	if err != nil {
-		return fmt.Errorf("Failed to edit JSON: %s", err)
+		return fmt.Errorf("Failed to marshal JSON: %s", err)
 	}
 
-	for key, value := range gp.ProfileArgs {
-		_, err = profiles.Set(value, "profiles", gp.Name, key)
-		if err != nil {
-			return fmt.Errorf("Failed to edit JSON: %s", err)
-		}
-	}
-	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), []byte(profiles.StringIndent("", "  ")), 0644)
+	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), profileData, 0644)
 	if err != nil {
 		return fmt.Errorf("Failed to save file: %s", err)
 	}
@@ -87,18 +92,20 @@ func (gp GoPack) UninstallProfile(path, mcPath string) error {
 		return fmt.Errorf("Failed to read file: %s", err)
 	}
 
-	profiles, err := gabs.ParseJSON(profileData)
+	var profiles LauncherProfiles
+	err = json.Unmarshal(profileData, &profiles)
 	if err != nil {
-		return fmt.Errorf("Failed to parse json: %s", err)
+		return fmt.Errorf("Failed to parse JSON: %s", err)
 	}
 
-	Infof("Removing %s from launcher_profiles.json", gp.Name)
-	err = profiles.Delete("profiles", gp.Name)
+	delete(profiles.Profiles, gp.Name)
+
+	profileData, err = json.MarshalIndent(&profiles, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Failed to edit JSON: %s", err)
+		return fmt.Errorf("Failed to marshal JSON: %s", err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), []byte(profiles.StringIndent("", "  ")), 0644)
+	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), profileData, 0644)
 	if err != nil {
 		return fmt.Errorf("Failed to save file: %s", err)
 	}

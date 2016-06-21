@@ -1,6 +1,5 @@
 # goPacked
-
-## Introduction
+[![Build Status](https://travis-ci.org/tulir293/gopacked.svg?branch=master)](https://travis-ci.org/tulir293/gopacked)
 goPacked is a simple text-based Minecraft modpack manager. It uses a fairly simple JSON pack format.
 
 ## Installing

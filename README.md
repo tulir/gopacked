@@ -10,13 +10,11 @@ There are compiled versions available for Linux and Windows. The latest version 
  * Windows: https://dl.maunium.net/programs/gopacked_windows.zip
 
 ### Self-compiled
-You may also compile the program yourself. Development is done using the latest version of Go (currently 1.6.2), so that is the recommended version to use when compiling. You can download go from https://golang.org/
+If you already have Go installed, simply use `go get maunium.net/go/gopacked`
 
-You must have the following libraries installed to compile goPacked.
-* Gabs by Ashley Jeffs: https://github.com/Jeffail/gabs ([license](https://github.com/Jeffail/gabs/blob/master/LICENSE))
-* pflag by Alex Ogier: https://github.com/ogier/pflag ([license](https://github.com/ogier/pflag/blob/master/LICENSE))
+Development is done using the latest version of Go (currently 1.6.2), so that is the recommended version to use when compiling. You can download Go from https://golang.org/
 
-The easiest way to download goPacked source and all necessary libraries is to use `go get maunium.net/go/gopacked`
+You must have [mauflag](https://maunium.net/go/mauflag) installed. If you simply `go get` the package, mauflag will be installed automatically.
 
 ## Usage
 Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`

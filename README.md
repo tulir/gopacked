@@ -1,5 +1,4 @@
 # goPacked
-[![Build Status](http://img.shields.io/travis/tulir293/gopacked.svg?style=flat-square)](https://travis-ci.org/tulir293/gopacked)
 [![License](http://img.shields.io/:license-gpl3-blue.svg?style=flat-square)](http://www.gnu.org/licenses/gpl-3.0.html)
 
 goPacked is a simple text-based Minecraft modpack manager. It uses a fairly simple JSON pack format.

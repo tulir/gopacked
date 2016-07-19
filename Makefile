@@ -1,24 +1,35 @@
 install: $(shell find -name "*.go")
 	go install
 
-debian: $(shell find -name "*.go")
-	go build
-	rm -f build/gopacked/usr/local/bin/gopacked
-	mv gopacked build/gopacked/usr/local/
-	nano build/gopacked/DEBIAN/control
-	dpkg-deb --build build/gopacked
+build-all: build-linux build-win
 
-linux: $(shell find -name "*.go")
-	go build
-	zip -9r gopacked_linux.zip gopacked LICENSE README.md
-	rm -f gopacked
-	mv gopacked_linux.zip build/
+build-linux: $(shell find -name "*.go")
+	env GOOS=linux go build -o gopacked
 
-windows: $(shell find -name "*.go")
-	env GOOS=windows go build
+build-win: $(shell find -name "*.go")
+	env GOOS=windows go build -o gopacked.exe
+
+debian: build-linux
+	mkdir -p build
+	mkdir -p package/usr/bin/
+	cp gopacked package/usr/bin/
+	dpkg-deb --build package gopacked.deb
+	mv gopacked.deb build/
+
+linux: build-linux
+	mkdir -p build
+	tar cvfJ gopacked_linux.tar.xz gopacked LICENSE README.md
+	mv gopacked_linux.tar.xz build/
+
+windows: build-win
+	mkdir -p build
 	zip -9r gopacked_windows.zip gopacked.exe LICENSE README.md
-	rm -f gopacked.exe
 	mv gopacked_windows.zip build/
 
+package: debian linux windows
+
+clean-exes:
+	rm -f gopacked gopacked.exe
+
 clean:
-	rm -f build/gopacked.deb build/gopacked_windows.zip build/gopacked_linux.zip
+	rm -rf build package/usr

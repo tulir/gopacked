@@ -33,7 +33,7 @@ var wantHelp = flag.Make().LongKey("help").ShortKey("h").Bool()
 
 var side = flag.Make().LongKey("side").ShortKey("s").Default(CLIENT).String()
 
-var version = Version{0, 2, 0, 0}
+var version = Version{0, 3, 0, 0}
 
 // Side constants
 const (
@@ -41,7 +41,7 @@ const (
 	SERVER = "server"
 )
 
-const help = `goPacked 0.2 - Simple command-line modpack manager.
+const help = `goPacked 0.3 - Simple command-line modpack manager.
 
 Usage:
   gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>

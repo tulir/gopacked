@@ -1,18 +1,19 @@
 // goPacked - A simple text-based Minecraft modpack manager.
-// Copyright (C) 2016 Tulir Asokan
+// Copyright (C) 2019 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
@@ -70,26 +71,25 @@ func untar(from io.Reader, target string) error {
 			return err
 		}
 
-		path := filepath.Join(target, header.Name)
-		info := header.FileInfo()
-		if info.IsDir() {
-			if err = os.MkdirAll(path, info.Mode()); err != nil {
-				return err
-			}
-			continue
-		}
-
-		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		_, err = io.Copy(file, tarReader)
+		err = unarchiveTar(header, target, tarReader)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func unarchiveTar(header *tar.Header, target string, reader io.Reader) error {
+	path := filepath.Join(target, header.Name)
+	info := header.FileInfo()
+	if info.IsDir() {
+		if err := os.MkdirAll(path, info.Mode()); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return unarchive(path, info, reader)
 }
 
 func unzip(archive, target string) error {
@@ -99,28 +99,40 @@ func unzip(archive, target string) error {
 	}
 
 	for _, file := range reader.File {
-		path := filepath.Join(target, file.Name)
-		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, file.Mode())
-			continue
-		}
-
-		fileReader, err := file.Open()
+		err = unarchiveZip(file, target)
 		if err != nil {
-			return err
-		}
-		defer fileReader.Close()
-
-		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-		if err != nil {
-			return err
-		}
-		defer targetFile.Close()
-
-		if _, err := io.Copy(targetFile, fileReader); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func unarchiveZip(file *zip.File, target string) error {
+	path := filepath.Join(target, file.Name)
+	if file.FileInfo().IsDir() {
+		_ = os.MkdirAll(path, file.Mode())
+		return nil
+	}
+
+	fileReader, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer fileReader.Close()
+
+	return unarchive(path, file.FileInfo(), fileReader)
+}
+
+func unarchive(toPath string, fileInfo os.FileInfo, reader io.Reader) error {
+	file, err := os.OpenFile(toPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode())
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return err
+	}
 	return nil
 }

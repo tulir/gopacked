@@ -1,18 +1,19 @@
 // goPacked - A simple text-based Minecraft modpack manager.
-// Copyright (C) 2016 Tulir Asokan
+// Copyright (C) 2019 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
@@ -112,7 +113,10 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 	if fe.Type == TypeDirectory {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			Infof("Creating directory %s", name)
-			os.MkdirAll(path, 0755)
+			err = os.MkdirAll(path, 0755)
+			if err != nil {
+				Warnf("Failed to create directory %s", name)
+			}
 		}
 		// Loop through the old file list. This loop updates outdated files and removes files that are no longer
 		// in the updated modpack definition.

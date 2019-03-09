@@ -1,18 +1,19 @@
 // goPacked - A simple text-based Minecraft modpack manager.
-// Copyright (C) 2016 Tulir Asokan
+// Copyright (C) 2019 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
@@ -39,75 +40,66 @@ type GoPack struct {
 	Files       FileEntry              `json:"files"`
 }
 
-// LauncherProfiles is a Minecraft launcher_profiles.json file container
-type LauncherProfiles struct {
-	Profiles        map[string]map[string]interface{} `json:"profiles"`
-	AuthDB          map[string]map[string]interface{} `json:"authenticationDatabase"`
-	SelectedProfile string                            `json:"selectedProfile"`
-	ClientToken     string                            `json:"clientToken"`
-	SelectedUser    string                            `json:"selectedUser"`
-	LauncherVersion map[string]interface{}            `json:"launcherVersion"`
+func readJSON(file string) (val map[string]interface{}, err error) {
+	var data []byte
+	data, err = ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &val)
+	return
+}
+
+func writeJSON(obj interface{}, file string) error {
+	data, err := json.Marshal(&obj)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(file, data, 0644)
 }
 
 // InstallProfile installs the profile data into launcher_profiles.json
 func (gp GoPack) InstallProfile(path, mcPath string) error {
-	profileData, err := ioutil.ReadFile(filepath.Join(mcPath, "launcher_profiles.json"))
+	launcherProfiles, err := readJSON(filepath.Join(mcPath, "launcher_profiles.json"))
 	if err != nil {
-		return fmt.Errorf("Failed to read file: %s", err)
-	}
-
-	var profiles LauncherProfiles
-	err = json.Unmarshal(profileData, &profiles)
-	if err != nil {
-		return fmt.Errorf("Failed to parse JSON: %s", err)
+		return fmt.Errorf("failed to read launcher_profiles.json: %s", err)
 	}
 
 	Infof("Adding %s to launcher_profiles.json", gp.Name)
 
-	var profile = make(map[string]interface{})
-	profile["name"] = gp.Name
-	profile["gameDir"] = path
-	profile["lastVersionId"] = gp.SimpleName
+	profiles := launcherProfiles["profiles"].(map[string]interface{})
+	profile := map[string]interface{}{
+		"name":          gp.Name,
+		"gameDir":       path,
+		"lastVersionId": gp.SimpleName,
+	}
 	for key, value := range gp.ProfileArgs {
 		profile[key] = value
 	}
-	profiles.Profiles[gp.Name] = profile
+	profiles[gp.Name] = profile
 
-	profileData, err = json.MarshalIndent(&profiles, "", "  ")
+	err = writeJSON(launcherProfiles, filepath.Join(mcPath, "launcher_profiles.json"))
 	if err != nil {
-		return fmt.Errorf("Failed to marshal JSON: %s", err)
-	}
-
-	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), profileData, 0644)
-	if err != nil {
-		return fmt.Errorf("Failed to save file: %s", err)
+		return fmt.Errorf("failed to save file: %s", err)
 	}
 	return nil
 }
 
 // UninstallProfile uninstalls the profile data from launcher_profiles.json
 func (gp GoPack) UninstallProfile(path, mcPath string) error {
-	profileData, err := ioutil.ReadFile(filepath.Join(mcPath, "launcher_profiles.json"))
+	launcherProfiles, err := readJSON(filepath.Join(mcPath, "launcher_profiles.json"))
 	if err != nil {
-		return fmt.Errorf("Failed to read file: %s", err)
+		return fmt.Errorf("failed to read launcher_profiles.json: %s", err)
 	}
 
-	var profiles LauncherProfiles
-	err = json.Unmarshal(profileData, &profiles)
-	if err != nil {
-		return fmt.Errorf("Failed to parse JSON: %s", err)
-	}
+	profiles := launcherProfiles["profiles"].(map[string]interface{})
+	delete(profiles, gp.Name)
 
-	delete(profiles.Profiles, gp.Name)
-
-	profileData, err = json.MarshalIndent(&profiles, "", "  ")
+	err = writeJSON(launcherProfiles, filepath.Join(mcPath, "launcher_profiles.json"))
 	if err != nil {
-		return fmt.Errorf("Failed to marshal JSON: %s", err)
-	}
-
-	err = ioutil.WriteFile(filepath.Join(mcPath, "launcher_profiles.json"), profileData, 0644)
-	if err != nil {
-		return fmt.Errorf("Failed to save file: %s", err)
+		return fmt.Errorf("failed to save file: %s", err)
 	}
 	return nil
 }
@@ -127,7 +119,11 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 
 	installerURL := fmt.Sprintf("http://files.minecraftforge.net/maven/net/minecraftforge/forge/%[1]s/forge-%[1]s-installer.jar", gp.ForgeVer)
 	installerPath := filepath.Join(path, "forge-installer.jar")
-	downloadFile(installerURL, installerPath)
+	err := downloadFile(installerURL, installerPath)
+	if err != nil {
+		Errorf("Failed to download Forge installer: %s", err)
+		return
+	}
 	var cmd *exec.Cmd
 	if side == CLIENT {
 		cmd = exec.Command("java", "-jar", installerPath)
@@ -137,13 +133,19 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 
 	Infof("Starting Forge installer...")
 	oldDir, _ := os.Getwd()
-	os.Chdir(path)
-	cmd.Run()
-	if len(oldDir) != 0 {
-		os.Chdir(oldDir)
+	_ = os.Chdir(path)
+	err = cmd.Run()
+	if err != nil {
+		Warnf("Running command resulted in error: %s", err)
 	}
-	os.Remove(installerPath)
-	Infof("Forge installer finised")
+	if len(oldDir) != 0 {
+		_ = os.Chdir(oldDir)
+	}
+	err = os.Remove(installerPath)
+	if err != nil {
+		Warnf("Failed to remove Forge installer: %s", err)
+	}
+	Infof("Forge installer finished")
 }
 
 // CheckVersion checks whether or not the goPacked instance is within the version requirements of this goPack.
@@ -154,8 +156,7 @@ func (gp GoPack) CheckVersion() bool {
 		if err != nil {
 			Warnf("Failed to parse maximum supported goPacked version")
 			continueAsk = true
-		}
-		if gpVer.Compare(version) == 1 {
+		} else if gpVer.Compare(version) == 1 {
 			Warnf("goPacked version greater than maximum supported by requested goPack")
 			continueAsk = true
 		}
@@ -165,8 +166,7 @@ func (gp GoPack) CheckVersion() bool {
 		if err != nil {
 			Warnf("Failed to parse minimum supported goPacked version")
 			continueAsk = true
-		}
-		if gpVer.Compare(version) == -1 {
+		} else if gpVer.Compare(version) == -1 {
 			Warnf("goPacked version smaller than minimum supported by requested goPack")
 			continueAsk = true
 		}
@@ -189,12 +189,17 @@ func (gp GoPack) Install(path, mcPath, side string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		Warnf("Failed to get absolute version of %s: %s", path, err)
+		Warnf("Failed to get absolute path of %s: %s", path, err)
 	}
-	os.MkdirAll(path, 0755)
+	err = os.MkdirAll(path, 0755)
+	if err != nil {
+		if !os.IsExist(err) {
+			Warnf("Failed to create directory at %s: %s", path, err)
+		}
+	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
+		Warnf("Failed to get absolute path of %s: %s", mcPath, err)
 	}
 
 	Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
@@ -282,18 +287,21 @@ func (gp GoPack) Uninstall(path, mcPath, side string) {
 		gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
 	}
 	gp.Files.Remove(path, "", side)
-	os.RemoveAll(path)
+	err = os.RemoveAll(path)
+	if err != nil {
+		Warnf("Failed to remove %s: %s", path, err)
+	}
 }
 
 // Save saves the gopack definion to the given path.
 func (gp GoPack) Save(path string) error {
-	json, err := json.Marshal(gp)
+	data, err := json.Marshal(gp)
 	if err != nil {
-		return fmt.Errorf("Failed to marshal: %s", err)
+		return fmt.Errorf("failed to marshal: %s", err)
 	}
-	err = ioutil.WriteFile(path, json, 0644)
+	err = ioutil.WriteFile(path, data, 0644)
 	if err != nil {
-		return fmt.Errorf("Failed to write: %s", err)
+		return fmt.Errorf("failed to write: %s", err)
 	}
 	return nil
 }

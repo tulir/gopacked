@@ -1,59 +1,48 @@
 // goPacked - A simple text-based Minecraft modpack manager.
-// Copyright (C) 2016 Tulir Asokan
+// Copyright (C) 2019 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
 
 // Version contains four version number levels. Level 1 is the highest in importance.
 // Higher importance means overriding of lower importances.
-type Version struct {
-	Level1, Level2, Level3, Level4 int
-}
+type Version []int
 
 // Compare compares this version to the given one.
 // Return value 1 means that this version is greater than the given one.
 // Return value 0 means that the versions are equal.
 // Return value -1 means that this version is smaller than the given one.
 func (ver Version) Compare(ver2 Version) int {
-	if ver.Level1 > ver2.Level1 {
-		return 1
-	} else if ver.Level1 < ver2.Level1 {
-		return -1
-	}
-
-	if ver.Level2 > ver2.Level2 {
-		return 1
-	} else if ver.Level2 < ver2.Level2 {
-		return -1
-	}
-
-	if ver.Level3 > ver2.Level3 {
-		return 1
-	} else if ver.Level3 < ver2.Level3 {
-		return -1
-	}
-
-	if ver.Level4 > ver2.Level4 {
-		return 1
-	} else if ver.Level4 < ver2.Level4 {
-		return -1
+	for i := 0; i < len(ver) || i < len(ver2); i++ {
+		var val1, val2 int
+		if len(ver) < i {
+			val1 = ver[i]
+		}
+		if len(ver2) < i {
+			val2 = ver2[i]
+		}
+		if val1 < val2 {
+			return -1
+		} else if val1 > val2 {
+			return 1
+		}
 	}
 	return 0
 }
@@ -74,7 +63,14 @@ func (ver Version) IsSmaller(ver2 Version) bool {
 }
 
 func (ver Version) String() string {
-	return fmt.Sprintf("%d.%d.%d.%d", ver.Level1, ver.Level2, ver.Level3, ver.Level4)
+	var buf strings.Builder
+	for i, val := range ver {
+		buf.WriteString(strconv.Itoa(val))
+		if i < len(ver)-1 {
+			buf.WriteRune('.')
+		}
+	}
+	return buf.String()
 }
 
 // ParseAndCompare parses a version out of the two strings and compares them.
@@ -94,32 +90,13 @@ func ParseAndCompare(str1, str2 string) (int, error) {
 func ParseVersion(str string) (Version, error) {
 	pieces := strings.Split(str, ".")
 
-	var ver Version
+	ver := make(Version, len(pieces))
 	var err error
-
-	if len(pieces) != 4 {
-		return ver, fmt.Errorf("The amount of levels (%d) is incorrect", len(pieces))
+	for i, piece := range pieces {
+		ver[i], err = strconv.Atoi(piece)
+		if err != nil {
+			return ver, err
+		}
 	}
-
-	ver.Level1, err = strconv.Atoi(pieces[0])
-	if err != nil {
-		return ver, fmt.Errorf("The first level is not an integer")
-	}
-
-	ver.Level2, err = strconv.Atoi(pieces[1])
-	if err != nil {
-		return ver, fmt.Errorf("The second level is not an integer")
-	}
-
-	ver.Level3, err = strconv.Atoi(pieces[2])
-	if err != nil {
-		return ver, fmt.Errorf("The third level is not an integer")
-	}
-
-	ver.Level4, err = strconv.Atoi(pieces[3])
-	if err != nil {
-		return ver, fmt.Errorf("The fourth level is not an integer")
-	}
-
 	return ver, nil
 }

@@ -34,7 +34,6 @@ import (
 	"maunium.net/go/gopacked/lib/gopacked"
 )
 
-var inputPath = flag.MakeFull("i", "input", "The Twitch modpack as a zip file to read.", "").String()
 var outputPath = flag.MakeFull("o", "output", "The file to output the modpack to.", "modpack.json").String()
 var extraOutputPath = flag.MakeFull("e", "extra-output", "The directory to output extra files that need to to be served under --web-prefix.", "modpackextra").String()
 var webPrefix = flag.MakeFull("w", "web-prefix", "The URL prefix for files that need to be hosted somewhere (e.g. https://example.com/modpack)", "https://example.com/modpack").String()
@@ -43,34 +42,33 @@ var wantHelp, _ = flag.MakeHelpFlag()
 const help = `goPacked Twitch modpack parser v0.1.0
 
 Usage:
-  twitchparse [-h] <-i PATH> [-o PATH] [-w HOST]
+  twitchparse [-h] [-o PATH] [-w HOST] <INPUT PATH>
 
 Help options:
   -h, --help            Show this help page.
 
 Application options:
-  -i, --input=PATH         The Twitch modpack as a zip file to read.
-  -o, --output=PATH        The file to output the modpack to.
+  -o, --output=PATH        The file to output the modpack to. Defaults to modpack.json
   -e, --extra-output=PATH  The directory to output extra files that need to to
-                           be served under --web-prefix.
+                           be served under --web-prefix. Defaults to modpackextra.
   -w, --web-prefix=HOST    The URL prefix for files that need to be hosted
                            somewhere (e.g. https://example.com/modpack).`
 
 func main() {
 	flag.SetHelpTitles("goPacked Twitch modpack parser v0.1.0",
-		"twitchparse [-h] <-i PATH> [-o PATH] [-w HOST]")
+		"twitchparse [-h] [-o PATH] [-w HOST] <INPUT PATH>")
 	err := flag.Parse()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stdout, help)
 		os.Exit(1)
-	} else if *wantHelp {
+	} else if *wantHelp || flag.NArg() < 1 {
 		fmt.Fprintln(os.Stdout, help)
 		os.Exit(0)
 	}
 
 	log.Infof("Reading input zip")
-	reader, err := zip.OpenReader(*inputPath)
+	reader, err := zip.OpenReader(flag.Arg(0))
 	if err != nil {
 		panic(err)
 	}
@@ -127,7 +125,7 @@ func main() {
 			fileTempPath := filepath.Join(overridesPath, file.Name())
 			if file.IsDir() {
 				if file.Name() != "mods" {
-					outputFile, err := os.OpenFile(filepath.Join(eop, file.Name() + ".zip"), os.O_CREATE|os.O_WRONLY, 0644)
+					outputFile, err := os.OpenFile(filepath.Join(eop, file.Name()+".zip"), os.O_CREATE|os.O_WRONLY, 0644)
 					if err != nil {
 						panic(err)
 					}
@@ -138,10 +136,10 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
-					packFiles["override/" + file.Name()] = gopacked.FileEntry{
-						Type: gopacked.TypeZipArchive,
+					packFiles["override/"+file.Name()] = gopacked.FileEntry{
+						Type:     gopacked.TypeZipArchive,
 						FileName: file.Name(),
-						URL: *webPrefix + "/" + file.Name() + ".zip",
+						URL:      *webPrefix + "/" + file.Name() + ".zip",
 					}
 				} else {
 					modOverrides, err := ioutil.ReadDir(fileTempPath)
@@ -156,7 +154,7 @@ func main() {
 					for _, modOverride := range modOverrides {
 						modTempPath := filepath.Join(fileTempPath, modOverride.Name())
 						if modOverride.IsDir() {
-							outputFile, err := os.OpenFile(filepath.Join(modOutputDir, modOverride.Name() + ".zip"), os.O_CREATE|os.O_WRONLY, 0644)
+							outputFile, err := os.OpenFile(filepath.Join(modOutputDir, modOverride.Name()+".zip"), os.O_CREATE|os.O_WRONLY, 0644)
 							if err != nil {
 								panic(err)
 							}
@@ -167,10 +165,10 @@ func main() {
 							if err != nil {
 								panic(err)
 							}
-							packFiles["override/mods/" + modOverride.Name()] = gopacked.FileEntry{
-								Type: gopacked.TypeZipArchive,
+							packFiles["override/mods/"+modOverride.Name()] = gopacked.FileEntry{
+								Type:     gopacked.TypeZipArchive,
 								FileName: modOverride.Name(),
-								URL: *webPrefix + "/mods/" + modOverride.Name() + ".zip",
+								URL:      *webPrefix + "/mods/" + modOverride.Name() + ".zip",
 							}
 						} else {
 							packFiles["override/mods/"+modOverride.Name()] = gopacked.FileEntry{
@@ -249,7 +247,7 @@ func main() {
 			},
 		},
 		Files: gopacked.FileEntry{
-			Type: gopacked.TypeDirectory,
+			Type:     gopacked.TypeDirectory,
 			Children: packFiles,
 		},
 	}

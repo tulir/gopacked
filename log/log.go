@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package main
+package log
 
 import (
 	"bufio"
@@ -30,8 +30,8 @@ var newline = []byte("\x1b[0m\n")
 
 // Inputf prints the given message and then waits for input
 func Inputf(message string, args ...interface{}) string {
-	os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
-	os.Stdout.Write([]byte(" "))
+	_, _ = os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
+	_, _ = os.Stdout.Write([]byte(" "))
 	bio := bufio.NewReader(os.Stdin)
 	line, _ := bio.ReadString('\n')
 	return line
@@ -39,28 +39,28 @@ func Inputf(message string, args ...interface{}) string {
 
 // Infof formats and prints the given message into stdout
 func Infof(message string, args ...interface{}) {
-	os.Stdout.Write(infoPrefix)
-	os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
-	os.Stdout.Write(newline)
+	_, _ = os.Stdout.Write(infoPrefix)
+	_, _ = os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
+	_, _ = os.Stdout.Write(newline)
 }
 
 // Warnf formats and prints the given message into stdout with a yellow color
 func Warnf(message string, args ...interface{}) {
-	os.Stdout.Write(warnPrefix)
-	os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
-	os.Stdout.Write(newline)
+	_, _ = os.Stdout.Write(warnPrefix)
+	_, _ = os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
+	_, _ = os.Stdout.Write(newline)
 }
 
 // Errorf formats and prints the given message into stderr with a red color
 func Errorf(message string, args ...interface{}) {
-	os.Stdout.Write(errorPrefix)
-	os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
-	os.Stdout.Write(newline)
+	_, _ = os.Stdout.Write(errorPrefix)
+	_, _ = os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
+	_, _ = os.Stdout.Write(newline)
 }
 
 // Fatalf formats and prints the given message into stderr with a purple color
 func Fatalf(message string, args ...interface{}) {
-	os.Stdout.Write(fatalPrefix)
-	os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
-	os.Stdout.Write(newline)
+	_, _ = os.Stdout.Write(fatalPrefix)
+	_, _ = os.Stdout.Write([]byte(fmt.Sprintf(message, args...)))
+	_, _ = os.Stdout.Write(newline)
 }

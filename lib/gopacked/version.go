@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package main
+package gopacked
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -71,6 +73,20 @@ func (ver Version) String() string {
 		}
 	}
 	return buf.String()
+}
+
+func (ver *Version) UnmarshalJSON(blob []byte) error {
+	var data string
+	err := json.Unmarshal(blob, &data)
+	if err != nil {
+		return err
+	}
+	*ver, err = ParseVersion(data)
+	return err
+}
+
+func (ver Version) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%s\"", ver.String())), nil
 }
 
 // ParseAndCompare parses a version out of the two strings and compares them.

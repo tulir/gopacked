@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"maunium.net/go/gopacked/lib/gopacked"
+	"maunium.net/go/gopacked/log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,7 +69,7 @@ func (gp GoPack) InstallProfile(path, mcPath string) error {
 		return fmt.Errorf("failed to read launcher_profiles.json: %s", err)
 	}
 
-	Infof("Adding %s to launcher_profiles.json", gp.Name)
+	log.Infof("Adding %s to launcher_profiles.json", gp.Name)
 
 	profiles := launcherProfiles["profiles"].(map[string]interface{})
 	profile := map[string]interface{}{
@@ -110,18 +112,18 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 		return
 	}
 
-	linec := []rune(Inputf("Would you like to install Forge v%s [y/N] ", gp.ForgeVer))
+	linec := []rune(log.Inputf("Would you like to install Forge v%s [y/N] ", gp.ForgeVer))
 	if linec[0] != 'y' && linec[0] != 'Y' {
 		return
 	}
 
-	Infof("Downloading Forge v%[1]s installer", gp.ForgeVer)
+	log.Infof("Downloading Forge v%[1]s installer", gp.ForgeVer)
 
 	installerURL := fmt.Sprintf("http://files.minecraftforge.net/maven/net/minecraftforge/forge/%[1]s/forge-%[1]s-installer.jar", gp.ForgeVer)
 	installerPath := filepath.Join(path, "forge-installer.jar")
 	err := downloadFile(installerURL, installerPath)
 	if err != nil {
-		Errorf("Failed to download Forge installer: %s", err)
+		log.Errorf("Failed to download Forge installer: %s", err)
 		return
 	}
 	var cmd *exec.Cmd
@@ -131,48 +133,48 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 		cmd = exec.Command("java", "-jar", installerPath, "--installServer")
 	}
 
-	Infof("Starting Forge installer...")
+	log.Infof("Starting Forge installer...")
 	oldDir, _ := os.Getwd()
 	_ = os.Chdir(path)
 	err = cmd.Run()
 	if err != nil {
-		Warnf("Running command resulted in error: %s", err)
+		log.Warnf("Running command resulted in error: %s", err)
 	}
 	if len(oldDir) != 0 {
 		_ = os.Chdir(oldDir)
 	}
 	err = os.Remove(installerPath)
 	if err != nil {
-		Warnf("Failed to remove Forge installer: %s", err)
+		log.Warnf("Failed to remove Forge installer: %s", err)
 	}
-	Infof("Forge installer finished")
+	log.Infof("Forge installer finished")
 }
 
 // CheckVersion checks whether or not the goPacked instance is within the version requirements of this goPack.
 func (gp GoPack) CheckVersion() bool {
 	var continueAsk = false
 	if len(gp.GoPackedMax) != 0 {
-		gpVer, err := ParseVersion(gp.GoPackedMax)
+		gpVer, err := gopacked.ParseVersion(gp.GoPackedMax)
 		if err != nil {
-			Warnf("Failed to parse maximum supported goPacked version")
+			log.Warnf("Failed to parse maximum supported goPacked version")
 			continueAsk = true
 		} else if gpVer.Compare(version) == 1 {
-			Warnf("goPacked version greater than maximum supported by requested goPack")
+			log.Warnf("goPacked version greater than maximum supported by requested goPack")
 			continueAsk = true
 		}
 	}
 	if len(gp.GoPackedMin) != 0 {
-		gpVer, err := ParseVersion(gp.GoPackedMin)
+		gpVer, err := gopacked.ParseVersion(gp.GoPackedMin)
 		if err != nil {
-			Warnf("Failed to parse minimum supported goPacked version")
+			log.Warnf("Failed to parse minimum supported goPacked version")
 			continueAsk = true
 		} else if gpVer.Compare(version) == -1 {
-			Warnf("goPacked version smaller than minimum supported by requested goPack")
+			log.Warnf("goPacked version smaller than minimum supported by requested goPack")
 			continueAsk = true
 		}
 	}
 	if continueAsk {
-		linec := []rune(Inputf("Would you like to continue anyway [y/N]"))
+		linec := []rune(log.Inputf("Would you like to continue anyway [y/N]"))
 		if linec[0] != 'y' && linec[0] != 'Y' {
 			return false
 		}
@@ -189,25 +191,25 @@ func (gp GoPack) Install(path, mcPath, side string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		Warnf("Failed to get absolute path of %s: %s", path, err)
+		log.Warnf("Failed to get absolute path of %s: %s", path, err)
 	}
 	err = os.MkdirAll(path, 0755)
 	if err != nil {
 		if !os.IsExist(err) {
-			Warnf("Failed to create directory at %s: %s", path, err)
+			log.Warnf("Failed to create directory at %s: %s", path, err)
 		}
 	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		Warnf("Failed to get absolute path of %s: %s", mcPath, err)
+		log.Warnf("Failed to get absolute path of %s: %s", mcPath, err)
 	}
 
-	Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
+	log.Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
 	if side == CLIENT {
 		err = gp.InstallProfile(path, mcPath)
 		if err != nil {
-			Errorf("Profile install failed: %s", err)
+			log.Errorf("Profile install failed: %s", err)
 		}
 
 		gp.MCLVersion.Install(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
@@ -215,10 +217,10 @@ func (gp GoPack) Install(path, mcPath, side string) {
 	gp.Files.Install(path, "", side)
 	gp.InstallForge(path, mcPath, side)
 
-	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
+	log.Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = gp.Save(filepath.Join(path, "gopacked.json"))
 	if err != nil {
-		Errorf("goPack definition save failed: %s", err)
+		log.Errorf("goPack definition save failed: %s", err)
 	}
 }
 
@@ -231,19 +233,19 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		Warnf("Failed to get absolute version of %s: %s", path, err)
+		log.Warnf("Failed to get absolute version of %s: %s", path, err)
 	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
+		log.Warnf("Failed to get absolute version of %s: %s", mcPath, err)
 	}
 
-	Infof("Updating %[1]s by %[3]s to v%[2]s (%[4]s-side)", gp.Name, gp.Version, gp.Author, side)
+	log.Infof("Updating %[1]s by %[3]s to v%[2]s (%[4]s-side)", gp.Name, gp.Version, gp.Author, side)
 
 	if side == CLIENT {
 		err = gp.InstallProfile(path, mcPath)
 		if err != nil {
-			Errorf("Profile install failed: %s", err)
+			log.Errorf("Profile install failed: %s", err)
 		}
 
 		gp.MCLVersion.Update(new.MCLVersion, filepath.Join(mcPath, "versions", gp.SimpleName), filepath.Join(mcPath, "versions", new.SimpleName), "", side)
@@ -251,37 +253,37 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 	gp.Files.Update(new.Files, path, path, "", side)
 	gp.InstallForge(path, mcPath, side)
 
-	Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
+	log.Infof("Saving goPack definition to %s", filepath.Join(path, "gopacked.json"))
 	err = new.Save(filepath.Join(path, "gopacked.json"))
 	if err != nil {
-		Errorf("goPack definition save failed: %s", err)
+		log.Errorf("goPack definition save failed: %s", err)
 	}
 }
 
 // Uninstall this GoPack.
 func (gp GoPack) Uninstall(path, mcPath, side string) {
-	linec := []rune(Inputf("Are you sure you wish to uninstall %s v%s [y/N] ", gp.Name, gp.Version))
+	linec := []rune(log.Inputf("Are you sure you wish to uninstall %s v%s [y/N] ", gp.Name, gp.Version))
 	if linec[0] != 'y' && linec[0] != 'Y' {
-		Infof("Uninstall cancelled")
+		log.Infof("Uninstall cancelled")
 		return
 	}
 
 	var err error
 	path, err = filepath.Abs(path)
 	if err != nil {
-		Warnf("Failed to get absolute version of %s: %s", path, err)
+		log.Warnf("Failed to get absolute version of %s: %s", path, err)
 	}
 	mcPath, err = filepath.Abs(mcPath)
 	if err != nil {
-		Warnf("Failed to get absolute version of %s: %s", mcPath, err)
+		log.Warnf("Failed to get absolute version of %s: %s", mcPath, err)
 	}
 
-	Infof("Uninstalling %[1]s v%[2]s by %[3]s from %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
+	log.Infof("Uninstalling %[1]s v%[2]s by %[3]s from %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
 	if side == CLIENT {
 		err = gp.UninstallProfile(path, mcPath)
 		if err != nil {
-			Errorf("Profile uninstall failed: %s", err)
+			log.Errorf("Profile uninstall failed: %s", err)
 		}
 
 		gp.MCLVersion.Remove(filepath.Join(mcPath, "versions", gp.SimpleName), "", side)
@@ -289,7 +291,7 @@ func (gp GoPack) Uninstall(path, mcPath, side string) {
 	gp.Files.Remove(path, "", side)
 	err = os.RemoveAll(path)
 	if err != nil {
-		Warnf("Failed to remove %s: %s", path, err)
+		log.Warnf("Failed to remove %s: %s", path, err)
 	}
 }
 

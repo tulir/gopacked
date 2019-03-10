@@ -20,21 +20,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"maunium.net/go/gopacked/lib/gopacked"
+	"maunium.net/go/gopacked/log"
 	flag "maunium.net/go/mauflag"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
 
-var installPath = flag.Make().LongKey("path").ShortKey("p").String()
-var minecraftPath = flag.Make().LongKey("minecraft").ShortKey("m").String()
-var wantHelp = flag.Make().LongKey("help").ShortKey("h").Bool()
+var installPath = flag.MakeFull("p", "path", "The path to save the modpack in.", "").String()
+var minecraftPath = flag.MakeFull("m", "minecraft", "The minecraft directory.", "").String()
+var side = flag.MakeFull("s", "side", "The side (client or server) to install.", CLIENT).String()
+var wantHelp, _ = flag.MakeHelpFlag()
 
-var side = flag.Make().LongKey("side").ShortKey("s").Default(CLIENT).String()
-
-var version = Version{0, 3, 0, 0}
+var version = gopacked.Version{0, 4, 0}
 
 // Side constants
 const (
@@ -42,25 +44,27 @@ const (
 	SERVER = "server"
 )
 
-const help = `goPacked 0.3 - Simple command-line modpack manager.
+const help = `goPacked v0.4.0 - Simple command-line Minecraft modpack manager.
 
 Usage:
   gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>
 
 Available actions:
-  install                  Install the modpack from the given URL.
-  update                   Update the modpack by URL, name or install path.
-  uninstall                Uninstall the modpack by URL, name or install path.
+  install               Install the modpack from the given URL.
+  update                Update the modpack by URL, name or install path.
+  uninstall             Uninstall the modpack by URL, name or install path.
 
 Help options:
-  -h, --help               Show this help page.
+  -h, --help            Show this help page.
 
 Application options:
-  -p, --path=PATH          The path to save the modpack in.
-  -m, --minecraft=PATH     The minecraft directory.
-  -s, --side=SIDE          The side (client or server) to install.`
+  -p, --path=PATH       The path to save the modpack in.
+  -m, --minecraft=PATH  The minecraft directory.
+  -s, --side=SIDE       The side (client or server) to install.`
 
 func init() {
+	flag.SetHelpTitles("goPacked "+version.String()+" - Simple command-line modpack manager.",
+		"gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>")
 	err := flag.Parse()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -84,7 +88,7 @@ func init() {
 
 	*side = strings.ToLower(*side)
 	if *side != CLIENT && *side != SERVER {
-		Fatalf("Couldn't recognize side %[1]s!", *side)
+		log.Fatalf("Couldn't recognize side %[1]s!", *side)
 		os.Exit(2)
 	}
 }
@@ -106,10 +110,10 @@ func main() {
 
 func install() {
 	var gp GoPack
-	Infof("Fetching goPack definition from %s", flag.Arg(1))
+	log.Infof("Fetching goPack definition from %s", flag.Arg(1))
 	err := fetchDefinition(&gp, flag.Arg(1))
 	if err != nil {
-		Fatalf("Failed to fetch goPack definition: %s", err)
+		log.Fatalf("Failed to fetch goPack definition: %s", err)
 		return
 	}
 
@@ -122,7 +126,7 @@ func install() {
 
 func updateOrUninstall(action string) {
 	if flag.NArg() < 2 && (installPath == nil || len(*installPath) == 0) {
-		Fatalf("goPack URL or install location not specified!")
+		log.Fatalf("goPack URL or install location not specified!")
 		return
 	}
 	var gp, updated = getUpdateDefinitions()
@@ -141,24 +145,24 @@ func getUpdateDefinitions() (GoPack, GoPack) {
 	var gp, updated GoPack
 	if flag.NArg() > 1 {
 		if strings.HasPrefix(flag.Arg(1), "http") {
-			Infof("Fetching goPack definition from %s", flag.Arg(1))
+			log.Infof("Fetching goPack definition from %s", flag.Arg(1))
 			err := fetchDefinition(&updated, flag.Arg(1))
 			if err != nil {
-				Fatalf("Failed to fetch goPack definition: %s", err)
+				log.Fatalf("Failed to fetch goPack definition: %s", err)
 			}
 		} else {
 			*installPath = filepath.Join(*minecraftPath, "gopacked", flag.Arg(1))
-			Infof("Reading goPack definition from %s", *installPath)
+			log.Infof("Reading goPack definition from %s", *installPath)
 			err := readDefinition(&gp, *installPath)
 			if err != nil {
-				Fatalf("Failed to read goPack definition: %s", err)
+				log.Fatalf("Failed to read goPack definition: %s", err)
 			}
 		}
 	} else {
-		Infof("Reading goPack definition from %s", *installPath)
+		log.Infof("Reading goPack definition from %s", *installPath)
 		err := readDefinition(&gp, *installPath)
 		if err != nil {
-			Fatalf("Failed to read goPack definition: %s", err)
+			log.Fatalf("Failed to read goPack definition: %s", err)
 		}
 	}
 	return gp, updated
@@ -166,26 +170,33 @@ func getUpdateDefinitions() (GoPack, GoPack) {
 
 func update(gp, updated GoPack) {
 	if len(gp.Name) == 0 {
-		Infof("Reading installed goPack definition from %s", *installPath)
+		log.Infof("Reading installed goPack definition from %s", *installPath)
 		err := readDefinition(&gp, *installPath)
 		if err != nil {
-			Fatalf("Failed to read local goPack definition: %s", err)
+			log.Fatalf("Failed to read local goPack definition: %s", err)
 		}
 	}
 
 	if len(updated.Name) == 0 {
-		Infof("Fetching updated goPack definition from %s", gp.UpdateURL)
+		log.Infof("Fetching updated goPack definition from %s", gp.UpdateURL)
 		err := fetchDefinition(&updated, gp.UpdateURL)
 		if err != nil {
-			Fatalf("Failed to updated goPack definition: %s", err)
+			log.Fatalf("Failed to updated goPack definition: %s", err)
 		}
 	}
 
 	gp.Update(updated, *installPath, *minecraftPath, *side)
 }
 
-func fetchDefinition(gp *GoPack, url string) error {
-	response, err := http.Get(url)
+func fetchDefinition(gp *GoPack, rawURL string) error {
+	fromURL, err := url.Parse(rawURL)
+	if err != nil {
+		return err
+	}
+	if len(fromURL.Scheme) == 0 {
+		fromURL.Scheme = "http"
+	}
+	response, err := http.Get(fromURL.String())
 	if err != nil {
 		return err
 	}

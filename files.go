@@ -18,6 +18,8 @@ package main
 
 import (
 	"io"
+	"maunium.net/go/gopacked/lib/gopacked"
+	"maunium.net/go/gopacked/log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,40 +49,40 @@ func (fe FileEntry) Install(path, name, side string) {
 		return
 	}
 	if fe.Type == TypeDirectory {
-		Infof("Creating directory %s", name)
+		log.Infof("Creating directory %s", name)
 		err := os.MkdirAll(path, 0755)
 		if err != nil {
-			Warnf("Failed to create %[1]s: %[2]s", name, err)
+			log.Warnf("Failed to create %[1]s: %[2]s", name, err)
 		}
 		for key, value := range fe.Children {
 			value.Install(value.path(path, key), key, side)
 		}
 	} else if fe.Type == TypeFile {
-		Infof("Downloading %[1]s v%[2]s", name, fe.Version)
+		log.Infof("Downloading %[1]s v%[2]s", name, fe.Version)
 		err := downloadFile(fe.URL, path)
 		if err != nil {
-			Errorf("Failed to download %[1]s: %[2]s", name, err)
+			log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 		}
 	} else if fe.Type == TypeZIPArchive {
-		Infof("Downloading and unzipping %[1]s v%[2]s", name, fe.Version)
+		log.Infof("Downloading and unzipping %[1]s v%[2]s", name, fe.Version)
 		err := os.MkdirAll(path, 0755)
 		if err != nil {
-			Warnf("Failed to create directory for %[1]s: %[2]s", name, err)
+			log.Warnf("Failed to create directory for %[1]s: %[2]s", name, err)
 			return
 		}
 		archivePath := filepath.Join(path, "temp-archive.zip")
 		err = downloadFile(fe.URL, archivePath)
 		if err != nil {
-			Errorf("Failed to download %[1]s: %[2]s", name, err)
+			log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 			return
 		}
 		err = unzip(archivePath, path)
 		if err != nil {
-			Errorf("Failed to unzip %[1]s: %[2]s", name, err)
+			log.Errorf("Failed to unzip %[1]s: %[2]s", name, err)
 		}
 		err = os.Remove(archivePath)
 		if err != nil {
-			Warnf("Failed to remove temp archive file: %[1]s", err)
+			log.Warnf("Failed to remove temp archive file: %[1]s", err)
 		}
 	}
 }
@@ -91,16 +93,16 @@ func (fe FileEntry) Remove(path, name, side string) {
 		return
 	}
 	if fe.Type == TypeDirectory || fe.Type == TypeZIPArchive {
-		Infof("Removing %[1]s...", path)
+		log.Infof("Removing %[1]s...", path)
 		err := os.RemoveAll(path)
 		if err != nil {
-			Errorf("Failed to remove %[1]s: %[2]s", path, err)
+			log.Errorf("Failed to remove %[1]s: %[2]s", path, err)
 		}
 	} else if fe.Type == TypeFile {
-		Infof("Removing %[1]s v%[2]s...", name, fe.Version)
+		log.Infof("Removing %[1]s v%[2]s...", name, fe.Version)
 		err := os.Remove(path)
 		if err != nil {
-			Errorf("Failed to remove %[1]s (%[3]s): %[2]s", name, err, path)
+			log.Errorf("Failed to remove %[1]s (%[3]s): %[2]s", name, err, path)
 		}
 	}
 }
@@ -112,10 +114,10 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 	}
 	if fe.Type == TypeDirectory {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			Infof("Creating directory %s", name)
+			log.Infof("Creating directory %s", name)
 			err = os.MkdirAll(path, 0755)
 			if err != nil {
-				Warnf("Failed to create directory %s", name)
+				log.Warnf("Failed to create directory %s", name)
 			}
 		}
 		// Loop through the old file list. This loop updates outdated files and removes files that are no longer
@@ -141,16 +143,16 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 		}
 	} else if fe.Type == TypeFile || fe.Type == TypeZIPArchive {
 		// Compare the versions of the new and old file.
-		compare, err := ParseAndCompare(new.Version, fe.Version)
+		compare, err := gopacked.ParseAndCompare(new.Version, fe.Version)
 		if err != nil {
-			Errorf("Failed to parse version entry of %s", name)
+			log.Errorf("Failed to parse version entry of %s", name)
 		}
 
 		// If the version number of the new file is different from the current one, upgrade (or downgrade) it.
 		if compare == 1 {
-			Infof("Updating %[1]s from v%[2]s to v%[3]s", name, fe.Version, new.Version)
+			log.Infof("Updating %[1]s from v%[2]s to v%[3]s", name, fe.Version, new.Version)
 		} else if compare == -1 {
-			Infof("Downgrading %[1]s from v%[2]s to v%[3]s", name, fe.Version, new.Version)
+			log.Infof("Downgrading %[1]s from v%[2]s to v%[3]s", name, fe.Version, new.Version)
 		} else {
 			return
 		}
@@ -158,35 +160,35 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 		if fe.Type == TypeFile {
 			err = os.Remove(path)
 			if err != nil {
-				Warnf("Failed to remove file at %[1]s: %[2]s", path, err)
+				log.Warnf("Failed to remove file at %[1]s: %[2]s", path, err)
 			}
 			err = downloadFile(new.URL, newpath)
 			if err != nil {
-				Errorf("Failed to download %[1]s: %[2]s", name, err)
+				log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 			}
 		} else if fe.Type == TypeZIPArchive {
 			err = os.RemoveAll(path)
 			if err != nil {
-				Warnf("Failed to remove directory at %[1]s: %[2]s", path, err)
+				log.Warnf("Failed to remove directory at %[1]s: %[2]s", path, err)
 			}
 			err := os.MkdirAll(newpath, 0755)
 			if err != nil {
-				Warnf("Failed to create directory for %[1]s: %[2]s", name, err)
+				log.Warnf("Failed to create directory for %[1]s: %[2]s", name, err)
 				return
 			}
 			archivePath := filepath.Join(newpath, "temp-archive.zip")
 			err = downloadFile(fe.URL, archivePath)
 			if err != nil {
-				Errorf("Failed to download %[1]s: %[2]s", name, err)
+				log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 				return
 			}
 			err = unzip(archivePath, newpath)
 			if err != nil {
-				Errorf("Failed to unzip %[1]s: %[2]s", name, err)
+				log.Errorf("Failed to unzip %[1]s: %[2]s", name, err)
 			}
 			err = os.Remove(archivePath)
 			if err != nil {
-				Warnf("Failed to remove temp archive file: %[1]s", err)
+				log.Warnf("Failed to remove temp archive file: %[1]s", err)
 			}
 		}
 	}

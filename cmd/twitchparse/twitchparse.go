@@ -143,6 +143,47 @@ func main() {
 						FileName: file.Name(),
 						URL: *webPrefix + "/" + file.Name() + ".zip",
 					}
+				} else {
+					modOverrides, err := ioutil.ReadDir(fileTempPath)
+					if err != nil {
+						panic(err)
+					}
+					modOutputDir := filepath.Join(eop, "mods")
+					err = os.MkdirAll(modOutputDir, 0755)
+					if err != nil {
+						panic(err)
+					}
+					for _, modOverride := range modOverrides {
+						modTempPath := filepath.Join(fileTempPath, modOverride.Name())
+						if modOverride.IsDir() {
+							outputFile, err := os.OpenFile(filepath.Join(modOutputDir, modOverride.Name() + ".zip"), os.O_CREATE|os.O_WRONLY, 0644)
+							if err != nil {
+								panic(err)
+							}
+							zipFile := zip.NewWriter(outputFile)
+							err = archive.MakeZip(zipFile, modTempPath, "")
+							_ = zipFile.Close()
+							_ = outputFile.Close()
+							if err != nil {
+								panic(err)
+							}
+							packFiles["override/mods/" + modOverride.Name()] = gopacked.FileEntry{
+								Type: gopacked.TypeZipArchive,
+								FileName: modOverride.Name(),
+								URL: *webPrefix + "/mods/" + modOverride.Name() + ".zip",
+							}
+						} else {
+							packFiles["override/mods/"+modOverride.Name()] = gopacked.FileEntry{
+								Type:     gopacked.TypeFile,
+								FileName: modOverride.Name(),
+								URL:      *webPrefix + "/mods/" + modOverride.Name(),
+							}
+							err = os.Rename(modTempPath, filepath.Join(modOutputDir, modOverride.Name()))
+							if err != nil {
+								panic(err)
+							}
+						}
+					}
 				}
 			} else {
 				packFiles["override/"+file.Name()] = gopacked.FileEntry{

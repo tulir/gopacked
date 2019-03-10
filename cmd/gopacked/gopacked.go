@@ -123,7 +123,10 @@ func updateOrUninstall(action string) {
 		log.Fatalf("goPack URL or install location not specified!")
 		return
 	}
-	var gp, updated = getUpdateDefinitions()
+	gp, updated, ok := getUpdateDefinitions()
+	if !ok {
+		return
+	}
 	if installPath == nil || len(*installPath) == 0 {
 		*installPath = filepath.Join(*minecraftPath, "gopacked", gp.SimpleName)
 	}
@@ -135,14 +138,14 @@ func updateOrUninstall(action string) {
 	}
 }
 
-func getUpdateDefinitions() (gopacked.GoPack, gopacked.GoPack) {
-	var gp, updated gopacked.GoPack
+func getUpdateDefinitions() (gp gopacked.GoPack, updated gopacked.GoPack, ok bool) {
 	if flag.NArg() > 1 {
 		if strings.HasPrefix(flag.Arg(1), "http") {
 			log.Infof("Fetching goPack definition from %s", flag.Arg(1))
 			err := fetchDefinition(&updated, flag.Arg(1))
 			if err != nil {
 				log.Fatalf("Failed to fetch goPack definition: %s", err)
+				ok = false
 			}
 		} else {
 			*installPath = filepath.Join(*minecraftPath, "gopacked", flag.Arg(1))
@@ -150,6 +153,7 @@ func getUpdateDefinitions() (gopacked.GoPack, gopacked.GoPack) {
 			err := readDefinition(&gp, *installPath)
 			if err != nil {
 				log.Fatalf("Failed to read goPack definition: %s", err)
+				ok = false
 			}
 		}
 	} else {
@@ -157,9 +161,10 @@ func getUpdateDefinitions() (gopacked.GoPack, gopacked.GoPack) {
 		err := readDefinition(&gp, *installPath)
 		if err != nil {
 			log.Fatalf("Failed to read goPack definition: %s", err)
+			ok = false
 		}
 	}
-	return gp, updated
+	return
 }
 
 func update(gp, updated gopacked.GoPack) {

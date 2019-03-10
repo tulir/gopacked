@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"maunium.net/go/gopacked/lib/log"
 	"os"
 	"strings"
 
@@ -61,11 +62,13 @@ func main() {
 		os.Exit(0)
 	}
 
+	log.Infof("Reading input zip")
 	reader, err := zip.OpenReader(*inputPath)
 	if err != nil {
 		panic(err)
 	}
 
+	log.Infof("Looking for manifest.json")
 	var packManifest TwitchManifest
 	for _, file := range reader.File {
 		if file.Name == "manifest.json" {
@@ -87,15 +90,17 @@ func main() {
 	packManifest.LoadFileData()
 	packManifest.LoadModData()
 
+	log.Infof("Looking for Forge version...")
 	var forgeVer string
 	for _, loader := range packManifest.Minecraft.ModLoaders {
 		if strings.HasPrefix(loader.ID, "forge-") {
 			forgeVer = packManifest.Minecraft.Version + "-" + loader.ID[len("forge-"):]
 		}
 	}
+	log.Infof("Forge version found: %s", forgeVer)
 
+	log.Infof("Converting mods to goPack format")
 	mods := map[string]gopacked.FileEntry{}
-
 	for _, mod := range packManifest.Files {
 		mods[mod.ModData.Name] = gopacked.FileEntry{
 			Type:     gopacked.TypeFile,
@@ -105,8 +110,8 @@ func main() {
 		}
 	}
 
+	log.Infof("Converting pack info to goPack format")
 	simpleName := strings.ToLower(strings.Replace(packManifest.Name, " ", "", -1))
-
 	gopack := gopacked.GoPack{
 		Name:        packManifest.Name,
 		SimpleName:  simpleName,
@@ -138,6 +143,7 @@ func main() {
 		},
 	}
 
+	log.Infof("Marshaling and writing finished goPack file to disk")
 	data, err := json.Marshal(&gopack)
 	if err != nil {
 		panic(err)
@@ -146,4 +152,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	log.Infof("All done")
 }

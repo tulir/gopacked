@@ -1,21 +1,22 @@
 # goPacked
-[![License](http://img.shields.io/:license-gpl3-blue.svg?style=flat-square)](http://www.gnu.org/licenses/gpl-3.0.html)
+[![License](http://img.shields.io/:license-agpl3-blue.svg?style=flat-square)](http://www.gnu.org/licenses/agpl-3.0.html)
 
 goPacked is a simple text-based Minecraft modpack manager. It uses a fairly simple JSON pack format.
 
 ## Installing
 ### Precompiled
-There are compiled versions available for Linux and Windows. The latest version is always available from the following links
- * Debian package: https://dl.maunium.net/programs/gopacked.deb
- * Other Linuxes: https://dl.maunium.net/programs/gopacked_linux.tar.gz
- * Windows: https://dl.maunium.net/programs/gopacked_windows.zip
+There are compiled versions available for Linux, macOS and Windows. The latest version is always available from the following links and in the [releases](https://github.com/tulir/gopacked/releases) section.
+* Debian package: https://dl.maunium.net/programs/gopacked.deb
+* Other Linuxes: https://dl.maunium.net/programs/gopacked_linux.tar.gz
+* macOS: https://dl.maunium.net/programs/gopacked_macos.zip
+* Windows: https://dl.maunium.net/programs/gopacked_windows.zip
 
 ### Self-compiled
-If you already have Go installed, simply use `go get maunium.net/go/gopacked`
+0. Install [Go](https://golang.org/) 1.11+
+1. Clone the repository
+2. Run `make`
 
-Development is done using the latest version of Go (currently 1.6.2), so that is the recommended version to use when compiling. You can download Go from https://golang.org/
-
-You must have [mauflag](https://maunium.net/go/mauflag) installed. If you simply `go get` the package, mauflag will be installed automatically.
+If you don't want to use `make`, you can also manually `go install` or `go build` in the `cmd/gopacked` or `cmd/twitchparse` subdirectories.
 
 ## Usage
 Basic usage: `gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>`

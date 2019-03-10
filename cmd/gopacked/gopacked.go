@@ -164,6 +164,7 @@ func getUpdateDefinitions() (gp gopacked.GoPack, updated gopacked.GoPack, ok boo
 			ok = false
 		}
 	}
+	ok = true
 	return
 }
 

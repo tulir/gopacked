@@ -5,16 +5,16 @@ install: $(shell find -name "*.go")
 build-all: build-linux build-win
 
 build-linux: $(shell find -name "*.go")
-	env GOOS=linux go build maunium.net/go/gopacked/cmd/gopacked -o gopacked
-	env GOOS=linux go build maunium.net/go/gopacked/cmd/twitchparse -o twitchparse
+	env GOOS=linux go build -o gopacked maunium.net/go/gopacked/cmd/gopacked
+	env GOOS=linux go build -o twitchparse maunium.net/go/gopacked/cmd/twitchparse
 
 build-win: $(shell find -name "*.go")
-	env GOOS=windows go build maunium.net/go/gopacked/cmd/gopacked -o gopacked.exe
-	env GOOS=windows go build maunium.net/go/gopacked/cmd/twitchparse -o twitchparse.exe
+	env GOOS=windows go build -o gopacked.exe maunium.net/go/gopacked/cmd/gopacked
+	env GOOS=windows go build -o twitchparse.exe maunium.net/go/gopacked/cmd/twitchparse
 
 build-macos: $(shell find -name "*.go")
-	env GOOS=darwin go build maunium.net/go/gopacked/cmd/gopacked -o gopacked
-	env GOOS=darwin go build maunium.net/go/gopacked/cmd/twitchparse -o twitchparse
+	env GOOS=darwin go build -o gopacked maunium.net/go/gopacked/cmd/gopacked
+	env GOOS=darwin go build -o twitchparse maunium.net/go/gopacked/cmd/twitchparse
 
 debian: build-linux
 	mkdir -p build
@@ -41,8 +41,6 @@ macos: build-macos
 
 package: debian linux macos windows
 
-clean-exes:
-	rm -f gopacked twitchparse gopacked.exe twitchparse.exe
-
 clean:
+	rm -f gopacked twitchparse gopacked.exe twitchparse.exe
 	rm -rf build package/usr

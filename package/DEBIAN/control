@@ -1,7 +1,7 @@
 Package: gopacked
-Version: 0.3-1
+Version: 0.4.0-1
 Section: base
 Priority: optional
 Architecture: amd64
-Maintainer: Tulir293 <tulir293@maunium.net>
+Maintainer: Tulir Asokan <tulir@maunium.net>
 Description: Simple command-line modpack manager.

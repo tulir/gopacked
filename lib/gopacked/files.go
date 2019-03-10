@@ -18,6 +18,7 @@ package gopacked
 
 import (
 	"io"
+	"maunium.net/go/gopacked/lib/archive"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -59,9 +60,9 @@ func (fe FileEntry) Install(path, name string, side Side) {
 			log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 			return
 		}
-		err = unzip(archivePath, path)
+		err = archive.Unzip(archivePath, path)
 		if err != nil {
-			log.Errorf("Failed to unzip %[1]s: %[2]s", name, err)
+			log.Errorf("Failed to Unzip %[1]s: %[2]s", name, err)
 		}
 		err = os.Remove(archivePath)
 		if err != nil {
@@ -162,9 +163,9 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name string, side Side)
 				log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 				return
 			}
-			err = unzip(archivePath, newpath)
+			err = archive.Unzip(archivePath, newpath)
 			if err != nil {
-				log.Errorf("Failed to unzip %[1]s: %[2]s", name, err)
+				log.Errorf("Failed to Unzip %[1]s: %[2]s", name, err)
 			}
 			err = os.Remove(archivePath)
 			if err != nil {

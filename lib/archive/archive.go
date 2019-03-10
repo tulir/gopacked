@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package gopacked
+package archive
 
 import (
 	"archive/tar"
@@ -23,29 +23,30 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-func untargz(from io.Reader, target string) error {
+func Untargz(from io.Reader, target string) error {
 	var buf bytes.Buffer
-	err := ungz(from, &buf)
+	err := Ungz(from, &buf)
 	if err != nil {
 		return err
 	}
-	return untar(&buf, target)
+	return Untar(&buf, target)
 }
 
-func untarbz2(from io.Reader, target string) error {
+func Untarbz2(from io.Reader, target string) error {
 	var buf bytes.Buffer
-	err := unbz2(from, &buf)
+	err := Unbz2(from, &buf)
 	if err != nil {
 		return err
 	}
-	return untar(&buf, target)
+	return Untar(&buf, target)
 }
 
-func ungz(from io.Reader, to io.Writer) error {
+func Ungz(from io.Reader, to io.Writer) error {
 	reader, err := gzip.NewReader(from)
 	if err != nil {
 		return err
@@ -54,13 +55,13 @@ func ungz(from io.Reader, to io.Writer) error {
 	return err
 }
 
-func unbz2(from io.Reader, to io.Writer) error {
+func Unbz2(from io.Reader, to io.Writer) error {
 	reader := bzip2.NewReader(from)
 	_, err := io.Copy(to, reader)
 	return err
 }
 
-func untar(from io.Reader, target string) error {
+func Untar(from io.Reader, target string) error {
 	tarReader := tar.NewReader(from)
 
 	for {
@@ -71,7 +72,7 @@ func untar(from io.Reader, target string) error {
 			return err
 		}
 
-		err = unarchiveTar(header, target, tarReader)
+		err = UnarchiveTarFile(header, target, tarReader)
 		if err != nil {
 			return err
 		}
@@ -79,7 +80,7 @@ func untar(from io.Reader, target string) error {
 	return nil
 }
 
-func unarchiveTar(header *tar.Header, target string, reader io.Reader) error {
+func UnarchiveTarFile(header *tar.Header, target string, reader io.Reader) error {
 	path := filepath.Join(target, header.Name)
 	info := header.FileInfo()
 	if info.IsDir() {
@@ -89,17 +90,17 @@ func unarchiveTar(header *tar.Header, target string, reader io.Reader) error {
 		return nil
 	}
 
-	return unarchive(path, info, reader)
+	return UnarchiveGenericFile(path, info, reader)
 }
 
-func unzip(archive, target string) error {
+func Unzip(archive, target string) error {
 	reader, err := zip.OpenReader(archive)
 	if err != nil {
 		return err
 	}
 
 	for _, file := range reader.File {
-		err = unarchiveZip(file, target)
+		err = UnarchiveZipFile(file, target)
 		if err != nil {
 			return err
 		}
@@ -108,7 +109,7 @@ func unzip(archive, target string) error {
 	return nil
 }
 
-func unarchiveZip(file *zip.File, target string) error {
+func UnarchiveZipFile(file *zip.File, target string) error {
 	path := filepath.Join(target, file.Name)
 	if file.FileInfo().IsDir() {
 		_ = os.MkdirAll(path, file.Mode())
@@ -121,10 +122,10 @@ func unarchiveZip(file *zip.File, target string) error {
 	}
 	defer fileReader.Close()
 
-	return unarchive(path, file.FileInfo(), fileReader)
+	return UnarchiveGenericFile(path, file.FileInfo(), fileReader)
 }
 
-func unarchive(toPath string, fileInfo os.FileInfo, reader io.Reader) error {
+func UnarchiveGenericFile(toPath string, fileInfo os.FileInfo, reader io.Reader) error {
 	file, err := os.OpenFile(toPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, fileInfo.Mode())
 	if err != nil {
 		return err
@@ -133,6 +134,39 @@ func unarchive(toPath string, fileInfo os.FileInfo, reader io.Reader) error {
 	_, err = io.Copy(file, reader)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func MakeZip(w *zip.Writer, basePath, baseInZip string) error {
+	files, err := ioutil.ReadDir(basePath)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		fullPath := filepath.Join(basePath, file.Name())
+		zipPath := filepath.Join(baseInZip, file.Name())
+		if !file.IsDir() {
+			dat, err := ioutil.ReadFile(fullPath)
+			if err != nil {
+				return err
+			}
+
+			f, err := w.Create(zipPath)
+			if err != nil {
+				return err
+			}
+			_, err = f.Write(dat)
+			if err != nil {
+				return err
+			}
+		} else if file.IsDir() {
+			err = MakeZip(w, fullPath, zipPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

@@ -21,10 +21,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"maunium.net/go/gopacked/lib/gopacked"
-	flag "maunium.net/go/mauflag"
 	"os"
 	"strings"
+
+	flag "maunium.net/go/mauflag"
+
+	"maunium.net/go/gopacked/lib/gopacked"
 )
 
 var inputPath = flag.MakeFull("i", "input", "The Twitch modpack as a zip file to read.", "").String()

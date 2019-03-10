@@ -16,6 +16,8 @@
 
 package gopacked
 
+var GPVersion = Version{0, 4, 0}
+
 // GoPack is the base struct for a goPacked modpack.
 type GoPack struct {
 	Name        string                 `json:"name"`
@@ -44,6 +46,7 @@ type Side string
 const (
 	SideClient Side = "client"
 	SideServer Side = "server"
+	SideBoth   Side = "both"
 )
 
 // FileEntry contains the data of a file or directory.

@@ -89,19 +89,6 @@ func (ver Version) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%s\"", ver.String())), nil
 }
 
-// ParseAndCompare parses a version out of the two strings and compares them.
-func ParseAndCompare(str1, str2 string) (int, error) {
-	ver1, err := ParseVersion(str1)
-	if err != nil {
-		return -2, err
-	}
-	ver2, err := ParseVersion(str2)
-	if err != nil {
-		return -2, err
-	}
-	return ver1.Compare(ver2), nil
-}
-
 // ParseVersion parses a version from a string.
 func ParseVersion(str string) (Version, error) {
 	pieces := strings.Split(str, ".")

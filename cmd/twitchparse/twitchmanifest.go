@@ -20,10 +20,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"maunium.net/go/gopacked/lib/gopacked"
-	"maunium.net/go/gopacked/log"
 	"net/http"
 	"strings"
+
+	"maunium.net/go/gopacked/lib/gopacked"
+	"maunium.net/go/gopacked/lib/log"
 )
 
 const CurseMetaURL = "https://staging_cursemeta.dries007.net/api/v3"
@@ -36,7 +37,7 @@ type TwitchManifest struct {
 	Name            string              `json:"name"`
 	Version         gopacked.Version    `json:"version"`
 	Author          string              `json:"author"`
-	Files           []*TwitchFile        `json:"files"`
+	Files           []*TwitchFile       `json:"files"`
 	OverridesDir    string              `json:"overrides"`
 }
 
@@ -49,9 +50,9 @@ type TwitchMinecraftInfo struct {
 }
 
 type TwitchFile struct {
-	ProjectID int           `json:"projectID"`
-	FileID    int           `json:"fileID"`
-	Required  bool          `json:"required"`
+	ProjectID int            `json:"projectID"`
+	FileID    int            `json:"fileID"`
+	Required  bool           `json:"required"`
 	FileData  *CurseMetaFile `json:"fileData,omitempty"`
 	ModData   *CurseMetaMod  `json:"modData,omitempty"`
 }

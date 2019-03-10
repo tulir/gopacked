@@ -14,33 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package main
+package gopacked
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"maunium.net/go/gopacked/lib/gopacked"
-	"maunium.net/go/gopacked/log"
 	"os"
 	"os/exec"
 	"path/filepath"
-)
 
-// GoPack is the base struct for a goPacked modpack.
-type GoPack struct {
-	Name        string                 `json:"name"`
-	SimpleName  string                 `json:"simplename"`
-	UpdateURL   string                 `json:"update-url"`
-	Author      string                 `json:"author"`
-	Version     string                 `json:"version"`
-	ForgeVer    string                 `json:"forge-version,omitempty"`
-	GoPackedMin string                 `json:"gopacked-version-minimum,omitempty"`
-	GoPackedMax string                 `json:"gopacked-version-maximum,omitempty"`
-	ProfileArgs map[string]interface{} `json:"profile-settings"`
-	MCLVersion  FileEntry              `json:"mcl-version"`
-	Files       FileEntry              `json:"files"`
-}
+	"maunium.net/go/gopacked/lib/log"
+)
 
 func readJSON(file string) (val map[string]interface{}, err error) {
 	var data []byte
@@ -107,7 +92,7 @@ func (gp GoPack) UninstallProfile(path, mcPath string) error {
 }
 
 // InstallForge installs the required version of forge for this gopack.
-func (gp GoPack) InstallForge(path, mcPath, side string) {
+func (gp GoPack) InstallForge(path, mcPath string, side Side) {
 	if len(gp.ForgeVer) == 0 {
 		return
 	}
@@ -127,7 +112,7 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 		return
 	}
 	var cmd *exec.Cmd
-	if side == CLIENT {
+	if side == SideClient {
 		cmd = exec.Command("java", "-jar", installerPath)
 	} else {
 		cmd = exec.Command("java", "-jar", installerPath, "--installServer")
@@ -154,21 +139,13 @@ func (gp GoPack) InstallForge(path, mcPath, side string) {
 func (gp GoPack) CheckVersion() bool {
 	var continueAsk = false
 	if len(gp.GoPackedMax) != 0 {
-		gpVer, err := gopacked.ParseVersion(gp.GoPackedMax)
-		if err != nil {
-			log.Warnf("Failed to parse maximum supported goPacked version")
-			continueAsk = true
-		} else if gpVer.Compare(version) == 1 {
+		if gp.GoPackedMax.Compare(GPVersion) == 1 {
 			log.Warnf("goPacked version greater than maximum supported by requested goPack")
 			continueAsk = true
 		}
 	}
 	if len(gp.GoPackedMin) != 0 {
-		gpVer, err := gopacked.ParseVersion(gp.GoPackedMin)
-		if err != nil {
-			log.Warnf("Failed to parse minimum supported goPacked version")
-			continueAsk = true
-		} else if gpVer.Compare(version) == -1 {
+		if gp.GoPackedMin.Compare(GPVersion) == -1 {
 			log.Warnf("goPacked version smaller than minimum supported by requested goPack")
 			continueAsk = true
 		}
@@ -183,7 +160,7 @@ func (gp GoPack) CheckVersion() bool {
 }
 
 // Install installs the GoPack to the given path and minecraft directory.
-func (gp GoPack) Install(path, mcPath, side string) {
+func (gp GoPack) Install(path, mcPath string, side Side) {
 	if !gp.CheckVersion() {
 		return
 	}
@@ -206,7 +183,7 @@ func (gp GoPack) Install(path, mcPath, side string) {
 
 	log.Infof("Installing %[1]s v%[2]s by %[3]s to %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
-	if side == CLIENT {
+	if side == SideClient {
 		err = gp.InstallProfile(path, mcPath)
 		if err != nil {
 			log.Errorf("Profile install failed: %s", err)
@@ -225,7 +202,7 @@ func (gp GoPack) Install(path, mcPath, side string) {
 }
 
 // Update this GoPack.
-func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
+func (gp GoPack) Update(new GoPack, path, mcPath string, side Side) {
 	if !new.CheckVersion() {
 		return
 	}
@@ -242,7 +219,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 
 	log.Infof("Updating %[1]s by %[3]s to v%[2]s (%[4]s-side)", gp.Name, gp.Version, gp.Author, side)
 
-	if side == CLIENT {
+	if side == SideClient {
 		err = gp.InstallProfile(path, mcPath)
 		if err != nil {
 			log.Errorf("Profile install failed: %s", err)
@@ -261,7 +238,7 @@ func (gp GoPack) Update(new GoPack, path, mcPath, side string) {
 }
 
 // Uninstall this GoPack.
-func (gp GoPack) Uninstall(path, mcPath, side string) {
+func (gp GoPack) Uninstall(path, mcPath string, side Side) {
 	linec := []rune(log.Inputf("Are you sure you wish to uninstall %s v%s [y/N] ", gp.Name, gp.Version))
 	if linec[0] != 'y' && linec[0] != 'Y' {
 		log.Infof("Uninstall cancelled")
@@ -280,7 +257,7 @@ func (gp GoPack) Uninstall(path, mcPath, side string) {
 
 	log.Infof("Uninstalling %[1]s v%[2]s by %[3]s from %[4]s (%[5]s-side)", gp.Name, gp.Version, gp.Author, path, side)
 
-	if side == CLIENT {
+	if side == SideClient {
 		err = gp.UninstallProfile(path, mcPath)
 		if err != nil {
 			log.Errorf("Profile uninstall failed: %s", err)

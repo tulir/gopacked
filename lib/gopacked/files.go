@@ -14,37 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package main
+package gopacked
 
 import (
 	"io"
-	"maunium.net/go/gopacked/lib/gopacked"
-	"maunium.net/go/gopacked/log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-// FileEntry contains the data of a file or directory.
-type FileEntry struct {
-	Type     string               `json:"type"`
-	FileName string               `json:"filename,omitempty"`
-	Version  string               `json:"version,omitempty"`
-	Side     string               `json:"side,omitempty"`
-	URL      string               `json:"url,omitempty"`
-	Children map[string]FileEntry `json:"children,omitempty"`
-}
-
-// The possible file types
-const (
-	TypeFile       string = "file"
-	TypeDirectory  string = "directory"
-	TypeZIPArchive string = "zip-archive"
+	"maunium.net/go/gopacked/lib/log"
 )
 
 // Install installs the file entry to the given path.
-func (fe FileEntry) Install(path, name, side string) {
+func (fe FileEntry) Install(path, name string, side Side) {
 	if !fe.checkSide(side) {
 		return
 	}
@@ -63,7 +46,7 @@ func (fe FileEntry) Install(path, name, side string) {
 		if err != nil {
 			log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 		}
-	} else if fe.Type == TypeZIPArchive {
+	} else if fe.Type == TypeZipArchive {
 		log.Infof("Downloading and unzipping %[1]s v%[2]s", name, fe.Version)
 		err := os.MkdirAll(path, 0755)
 		if err != nil {
@@ -88,11 +71,11 @@ func (fe FileEntry) Install(path, name, side string) {
 }
 
 // Remove removes the given FileEntry from the given path.
-func (fe FileEntry) Remove(path, name, side string) {
+func (fe FileEntry) Remove(path, name string, side Side) {
 	if !fe.checkSide(side) {
 		return
 	}
-	if fe.Type == TypeDirectory || fe.Type == TypeZIPArchive {
+	if fe.Type == TypeDirectory || fe.Type == TypeZipArchive {
 		log.Infof("Removing %[1]s...", path)
 		err := os.RemoveAll(path)
 		if err != nil {
@@ -108,7 +91,7 @@ func (fe FileEntry) Remove(path, name, side string) {
 }
 
 // Update updates this FileEntry to the given new version.
-func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
+func (fe FileEntry) Update(new FileEntry, path, newpath, name string, side Side) {
 	if !fe.checkSide(side) {
 		return
 	}
@@ -141,12 +124,9 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 				value.Install(value.path(path, key), key, side)
 			}
 		}
-	} else if fe.Type == TypeFile || fe.Type == TypeZIPArchive {
+	} else if fe.Type == TypeFile || fe.Type == TypeZipArchive {
 		// Compare the versions of the new and old file.
-		compare, err := gopacked.ParseAndCompare(new.Version, fe.Version)
-		if err != nil {
-			log.Errorf("Failed to parse version entry of %s", name)
-		}
+		compare := new.Version.Compare(fe.Version)
 
 		// If the version number of the new file is different from the current one, upgrade (or downgrade) it.
 		if compare == 1 {
@@ -158,7 +138,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 		}
 
 		if fe.Type == TypeFile {
-			err = os.Remove(path)
+			err := os.Remove(path)
 			if err != nil {
 				log.Warnf("Failed to remove file at %[1]s: %[2]s", path, err)
 			}
@@ -166,12 +146,12 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 			if err != nil {
 				log.Errorf("Failed to download %[1]s: %[2]s", name, err)
 			}
-		} else if fe.Type == TypeZIPArchive {
-			err = os.RemoveAll(path)
+		} else if fe.Type == TypeZipArchive {
+			err := os.RemoveAll(path)
 			if err != nil {
 				log.Warnf("Failed to remove directory at %[1]s: %[2]s", path, err)
 			}
-			err := os.MkdirAll(newpath, 0755)
+			err = os.MkdirAll(newpath, 0755)
 			if err != nil {
 				log.Warnf("Failed to create directory for %[1]s: %[2]s", name, err)
 				return
@@ -195,7 +175,7 @@ func (fe FileEntry) Update(new FileEntry, path, newpath, name, side string) {
 }
 
 func (fe FileEntry) path(path, name string) string {
-	if fe.Type == TypeDirectory || fe.Type == TypeZIPArchive {
+	if fe.Type == TypeDirectory || fe.Type == TypeZipArchive {
 		if len(fe.FileName) != 0 {
 			if fe.FileName != "//" {
 				path = filepath.Join(path, fe.FileName)
@@ -214,8 +194,8 @@ func (fe FileEntry) path(path, name string) string {
 	return path
 }
 
-func (fe FileEntry) checkSide(side string) bool {
-	return len(fe.Side) == 0 || side == fe.Side || side == "both"
+func (fe FileEntry) checkSide(side Side) bool {
+	return len(fe.Side) == 0 || side == fe.Side || side == SideBoth
 }
 
 func downloadFile(url, saveTo string) error {

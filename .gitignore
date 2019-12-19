@@ -1,1 +1,5 @@
 build/
+package/usr
+gopacked
+twitchparse
+*.exe

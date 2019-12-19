@@ -38,7 +38,7 @@ var minecraftPath = flag.MakeFull("m", "minecraft", "The minecraft directory.", 
 var side = flag.MakeFull("s", "side", "The side (client or server) to install.", string(gopacked.SideClient)).String()
 var wantHelp, _ = flag.MakeHelpFlag()
 
-const help = `goPacked v0.4.0 - Simple command-line Minecraft modpack manager.
+const help = `goPacked v0.4.1 - Simple command-line Minecraft modpack manager.
 
 Usage:
   gopacked [-h] [-p PATH] [-m PATH] <ACTION> <URL/NAME>

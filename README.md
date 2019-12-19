@@ -65,9 +65,9 @@ The base may contain a profile settings block which contains the non-default set
 ### File entries
 A file entry is a JSON object with at least the type of the entry. All file entries are parsed as equal, but some fields may be ignored when processing depending on the type of the file entry. The possible file entry fields are as follows:
  * `type` - Identifies the type of the file entry. Allowed types:
-  * `directory`
-  * `file`
-  * `zip-archive` (upcoming)
+  * `directory` - A directory that can contain multiple files and directories.
+  * `file` - A single file.
+  * `zip-archive` - A single zip file that is extracted and becomes a directory in the installation.
  * `filename` - The name to save the file to. Affects all types, will determine the unarchive directory name for archives.
  * `version` - The version of the file. Ignored by directories, used for comparison of other types for updating/downgrading.
  * `url` - The URL to download the file from. Ignored by directories.
